@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { LogoutLink } from '@kinde-oss/kinde-auth-nextjs/components';
+import { LogoutLink, PortalLink } from '@kinde-oss/kinde-auth-nextjs/components';
 import { CreditCard, LogOut, User } from 'lucide-react';
 
 const user = {
@@ -54,14 +54,18 @@ export function SidebarUserInfo() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem>
-            <User />
-            Account
+          <DropdownMenuItem asChild>
+            <PortalLink>
+              <User />
+              Account
+            </PortalLink>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem>
-            <CreditCard />
-            Biiling
+          <DropdownMenuItem asChild>
+            <PortalLink>
+              <CreditCard />
+              Biiling
+            </PortalLink>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild>
