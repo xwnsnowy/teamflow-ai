@@ -23,11 +23,11 @@ import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import z from 'zod';
 import { workspaceSchema, WorkspaceSchemaType } from '@/schemas/workspace';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { orpc } from '@/lib/orpc';
 import { toast } from 'sonner';
+import { isDefinedError } from '@orpc/client';
 
 export function CreateWorkspace() {
   const [open, setOpen] = useState(false);
@@ -53,7 +53,17 @@ export function CreateWorkspace() {
         setOpen(false);
       },
       onError: (error) => {
-        toast.error(error.message);
+        if (isDefinedError(error)) {
+          if (error.code === 'RATE_LIMITED') {
+            toast.error(error.message);
+            return;
+          }
+
+          toast.error(error.message);
+          return;
+        }
+
+        toast.error('Failed to create workspace. Please try again.');
       },
     }),
   );
