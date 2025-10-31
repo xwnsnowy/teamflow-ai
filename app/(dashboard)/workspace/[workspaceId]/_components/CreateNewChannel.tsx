@@ -76,6 +76,14 @@ export function CreateNewChannel() {
                 </FormItem>
               )}
             />
+
+            <Button
+              type="submit"
+              className="mt-4 w-full"
+              disabled={!form.formState.isValid || form.formState.isSubmitting}
+            >
+              Create Channel
+            </Button>
           </form>
         </Form>
       </DialogContent>
