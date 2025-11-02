@@ -1,6 +1,6 @@
 'use client';
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -16,6 +16,7 @@ import { orpc } from '@/lib/orpc';
 import { LogoutLink, PortalLink } from '@kinde-oss/kinde-auth-nextjs/components';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { CreditCard, LogOut, User } from 'lucide-react';
+import Image from 'next/image';
 
 export function SidebarUserInfo() {
   const {
@@ -31,9 +32,10 @@ export function SidebarUserInfo() {
           className="size-12 rounded-xl hover:rounded-lg transition-all duration-200 bg-background/50 border-border/50 hover:bg-accent hover:text-accent"
         >
           <Avatar>
-            <AvatarImage
+            <Image
               src={getAvatar(user.picture, user.email || 'anonymous')}
               alt="User Image"
+              fill
               className="object-cover"
             />
             <AvatarFallback>
@@ -45,9 +47,10 @@ export function SidebarUserInfo() {
       <DropdownMenuContent align="end" side="right" sideOffset={8} className="w-[200px]">
         <DropdownMenuLabel className="font-normal flex items-center gap-2 px-1 py-2 text-left text-sm">
           <Avatar className="relative size-8 rounded-lg">
-            <AvatarImage
+            <Image
               src={getAvatar(user.picture, user.email || 'anonymous')}
               alt="User Image"
+              fill
               className="object-cover"
             />
             <AvatarFallback>
