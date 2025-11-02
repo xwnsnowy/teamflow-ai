@@ -14,18 +14,15 @@ export const channelNameSchema = z.object({
     .string()
     .min(2, 'Channel name must be at least 2 characters')
     .max(50, 'Channel name must be at most 50 characters')
-    .transform((name, ctx) => {
-      const transfromedName = transformChannelName(name);
-
-      if (transfromedName !== name) {
-        ctx.addIssue({
-          code: 'custom',
-          message: 'Channel name must only contain letters, numbers, and hyphens',
-        });
-        return z.NEVER;
-      }
-      return transfromedName;
-    }),
+    .refine(
+      (name) => {
+        const transformed = transformChannelName(name);
+        return transformed.length >= 2;
+      },
+      {
+        message: 'Channel name must contain at least 2 valid characters after formatting',
+      },
+    ),
 });
 
 export type ChannelNameSchemaType = z.infer<typeof channelNameSchema>;

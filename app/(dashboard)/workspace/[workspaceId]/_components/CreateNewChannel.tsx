@@ -63,7 +63,8 @@ export function CreateNewChannel() {
   );
 
   function onSubmit(values: ChannelNameSchemaType) {
-    createChannelMutation.mutate(values);
+    const transformedName = transformChannelName(values.name);
+    createChannelMutation.mutate({ name: transformedName });
   }
 
   const watchWorkspaceName = form.watch('name');
@@ -104,7 +105,6 @@ export function CreateNewChannel() {
                       </code>
                     </p>
                   )}
-                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -112,11 +112,7 @@ export function CreateNewChannel() {
             <Button
               type="submit"
               className="mt-4 w-full"
-              disabled={
-                !form.formState.isValid ||
-                form.formState.isSubmitting ||
-                createChannelMutation.isPending
-              }
+              disabled={createChannelMutation.isPending}
             >
               {createChannelMutation.isPending ? 'Creating...' : 'Create Channel'}
             </Button>
