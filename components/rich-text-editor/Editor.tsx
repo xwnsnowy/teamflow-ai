@@ -12,7 +12,7 @@ export function RichTextEditor() {
     editorProps: {
       attributes: {
         class:
-          'min-h-[125px] prose prose-sm sm:prose lg:prose-lg xl:prose-xl focus:outline-none dark:prose-invert w-full p-4',
+          'min-h-[125px] max-w-none prose prose-sm sm:prose lg:prose-lg xl:prose-xl focus:outline-none dark:prose-invert p-4',
       },
     },
   });
