@@ -1,6 +1,3 @@
-// Enable client-side rendering for this component
-'use client';
-
 import parse from 'html-react-parser';
 import DOMPurify from 'dompurify';
 import { baseExtension } from './extension';
@@ -48,7 +45,7 @@ export function RichTextViewer({ content, className }: RichTextViewerProps) {
   // Render the sanitized HTML with Tailwind prose styling
   return (
     // Apply prose classes for rich text styling, dark mode support, and custom className
-    <div className={`prose prose-sm max-w-none dark:prose-invert ${className || ''}`}>
+    <div className={`prose prose-sm max-w-none dark:prose-invert break-words ${className || ''}`}>
       {/* Parse the sanitized HTML string into React elements */}
       {parse(sanitizedHtml)}
     </div>

@@ -7,13 +7,15 @@ import { useForm } from 'react-hook-form';
 import { MessageComposer } from './MessageComposer';
 import { orpc } from '@/lib/orpc';
 import { toast } from 'sonner';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 interface MessageInputFormProps {
   channelId: string;
 }
 
 export function MessageInputForm({ channelId }: MessageInputFormProps) {
+  const queryClient = useQueryClient();
+
   const form = useForm({
     resolver: zodResolver(createMessageChannelSchema),
     defaultValues: {
@@ -25,6 +27,9 @@ export function MessageInputForm({ channelId }: MessageInputFormProps) {
   const createMessageChannelMutation = useMutation(
     orpc.message.create.mutationOptions({
       onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: orpc.message.list.key(),
+        });
         return toast.success('Message sent successfully!');
       },
       onError: () => {
