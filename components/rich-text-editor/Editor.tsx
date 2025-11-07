@@ -46,8 +46,8 @@ export function RichTextEditor({ field, sendButton, footerLeft }: RichTextEditor
       <MenuBar editor={editor} />
       <EditorContent editor={editor} />
       <div className="flex items-center justify-between gap-2 px-3 py-2 border-t border-input bg-card">
-        <div className="min-h-8 flex items-center">{footerLeft}</div>
-        <div className="shrink-0">{sendButton}</div>
+        <div className="min-h-8 shrink-0">{footerLeft}</div>
+        <div className="min-h-8 shrink-0">{sendButton}</div>
       </div>
     </div>
   );

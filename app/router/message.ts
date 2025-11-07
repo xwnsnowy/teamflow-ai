@@ -50,3 +50,40 @@ export const createMessageChannel = base
 
     return { ...created };
   });
+
+export const listMessages = base
+  .use(requiredAuthMiddleware)
+  .use(requiredWorkspaceMiddleware)
+  .use(standardSecurityMiddleware)
+  .route({
+    method: 'GET',
+    path: '/message',
+    summary: 'List messages in a channel',
+    tags: ['message'],
+  })
+  .input(z.string())
+  .output(z.array(z.custom<Message>()))
+  .handler(async ({ input, context, errors }) => {
+    const channelId = input;
+    const channel = await prisma.channel.findFirst({
+      where: {
+        id: channelId,
+        workspaceId: context.workspace.orgCode,
+      },
+    });
+
+    if (!channel) {
+      throw errors.FORBIDDEN();
+    }
+
+    const data = await prisma.message.findMany({
+      where: {
+        channelId: channelId,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    return data;
+  });

@@ -46,7 +46,12 @@ export function MessageInputForm({ channelId }: MessageInputFormProps) {
           render={({ field }) => (
             <FormItem>
               <FormControl>
-                <MessageComposer value={field.value} onChange={field.onChange} />
+                <MessageComposer
+                  value={field.value}
+                  onChange={field.onChange}
+                  onSubmit={() => onSubmit(form.getValues())}
+                  isPending={createMessageChannelMutation.isPending}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
