@@ -14,13 +14,14 @@ export function MessagesList() {
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const prevMessagesLengthRef = useRef(0);
+  const prevScrollHeightRef = useRef(0);
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, error } =
     useInfiniteQuery({
       ...orpc.message.list.infiniteOptions({
         input: (pageParam: string | undefined) => ({
           channelId: channelId!,
-          limit: 30,
+          limit: 5,
           cursor: pageParam,
         }),
         initialPageParam: undefined,
@@ -28,11 +29,11 @@ export function MessagesList() {
           return lastPage.hasMore ? lastPage.nextCursor : undefined;
         },
         select: (data) => ({
-          pages: data.pages.map((page) => ({
+          pages: [...data.pages].reverse().map((page) => ({
             ...page,
             items: page.items.slice().reverse(),
           })),
-          pageParams: data.pageParams.slice().reverse(),
+          pageParams: [...data.pageParams].reverse(),
         }),
       }),
       staleTime: 30_000,
@@ -56,7 +57,7 @@ export function MessagesList() {
 
     container.addEventListener('scroll', handleScroll);
     return () => container.removeEventListener('scroll', handleScroll);
-  }, [messages.length]); // Thêm dependency messages.length
+  }, [messages.length]);
 
   // Auto scroll to bottom on initial load + smooth scroll for new messages
   useEffect(() => {
@@ -68,23 +69,38 @@ export function MessagesList() {
       container.scrollTop = container.scrollHeight;
       setHasInitialScrolled(true);
       prevMessagesLengthRef.current = messages.length;
+      prevScrollHeightRef.current = container.scrollHeight;
       return;
     }
 
-    // Smooth scroll cho tin nhắn mới
-    if (messages.length > prevMessagesLengthRef.current) {
-      const scrollBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
-      const isNearBottom = scrollBottom < 150; // User đang ở gần cuối (trong vòng 150px)
+    const messagesAdded = messages.length - prevMessagesLengthRef.current;
 
-      if (isNearBottom) {
-        container.scrollTo({
-          top: container.scrollHeight,
-          behavior: 'smooth',
-        });
+    // Nếu có tin nhắn mới (thêm vào cuối danh sách)
+    if (messagesAdded > 0) {
+      // Kiểm tra xem tin nhắn mới có phải được thêm vào đầu (load more) hay cuối (tin nhắn mới)
+      const isLoadingOlder =
+        prevScrollHeightRef.current > 0 && container.scrollHeight > prevScrollHeightRef.current;
+
+      if (isLoadingOlder) {
+        // Load tin nhắn cũ: maintain scroll position
+        const heightDifference = container.scrollHeight - prevScrollHeightRef.current;
+        container.scrollTop = container.scrollTop + heightDifference;
+      } else {
+        // Tin nhắn mới: smooth scroll nếu user đang ở gần bottom
+        const scrollBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+        const isNearBottom = scrollBottom < 150;
+
+        if (isNearBottom) {
+          container.scrollTo({
+            top: container.scrollHeight,
+            behavior: 'smooth',
+          });
+        }
       }
     }
 
     prevMessagesLengthRef.current = messages.length;
+    prevScrollHeightRef.current = container.scrollHeight;
   }, [messages.length, hasInitialScrolled]);
 
   // Intersection Observer for infinite scroll (load more when scrolling up)
@@ -94,6 +110,10 @@ export function MessagesList() {
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
+          const container = scrollContainerRef.current;
+          if (container) {
+            prevScrollHeightRef.current = container.scrollHeight;
+          }
           fetchNextPage();
         }
       },
