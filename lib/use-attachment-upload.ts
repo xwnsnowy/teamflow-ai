@@ -18,7 +18,6 @@ export function useAttachmentUpload() {
   const reset = useCallback(() => {
     setStagedUrl(null);
     setUploading(false);
-    setIsOpen(false);
   }, []);
 
   return useMemo(

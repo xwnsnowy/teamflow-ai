@@ -23,6 +23,16 @@ const nextConfig: NextConfig = {
         hostname: 'avatar.vercel.sh',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: '*.ufs.sh',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.ingest.uploadthing.com',
+        pathname: '/**',
+      },
     ],
   },
 };
