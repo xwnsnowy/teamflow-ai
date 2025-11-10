@@ -25,7 +25,7 @@ export function MessagesList() {
   const infiniteQueryOptions = orpc.message.list.infiniteOptions({
     input: (pageParam: string | undefined) => ({
       channelId: channelId!,
-      limit: 5,
+      limit: 30,
       cursor: pageParam,
     }),
     initialPageParam: undefined,

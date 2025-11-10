@@ -56,7 +56,7 @@ async function existingMiddleware(req: NextRequest) {
 }
 
 const authMiddleware = withAuth(existingMiddleware, {
-  publicPaths: ['/'],
+  publicPaths: ['/', '/api/uploadthing'],
 }) as NextMiddleware;
 
 export default createMiddleware(aj, authMiddleware);
