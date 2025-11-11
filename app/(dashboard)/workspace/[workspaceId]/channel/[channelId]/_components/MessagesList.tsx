@@ -30,6 +30,7 @@ export function MessagesList() {
       limit: 30,
       cursor: pageParam,
     }),
+    queryKey: ['messages', 'list', channelId],
     initialPageParam: undefined,
     getNextPageParam: (lastPage: any) => {
       return lastPage.hasMore ? lastPage.nextCursor : undefined;
@@ -51,9 +52,6 @@ export function MessagesList() {
     });
 
   const messages = useMemo(() => data?.pages.flatMap((page) => page.items) ?? [], [data?.pages]);
-
-  const lastMessageId = messages[messages.length - 1]?.id;
-  const lastMessageAuthorId = messages[messages.length - 1]?.authorId;
 
   const checkIfNearBottom = (container: HTMLDivElement, threshold = 150) => {
     const scrollBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
