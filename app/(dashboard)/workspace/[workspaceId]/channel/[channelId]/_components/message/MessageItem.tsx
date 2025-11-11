@@ -12,15 +12,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Skeleton } from '@/components/ui/skeleton';
 
 interface MessageItemProps {
   message: Message;
+  onImageLoad?: () => void;
 }
 
-export function MessageItem({ message }: MessageItemProps) {
+export function MessageItem({ message, onImageLoad }: MessageItemProps) {
   const [isImageOpen, setIsImageOpen] = useState(false);
-  const [imageLoading, setImageLoading] = useState(true);
 
   return (
     <>
@@ -54,19 +53,16 @@ export function MessageItem({ message }: MessageItemProps) {
           </div>
 
           {message.imageUrl && (
-            <div className="mt-2 relative max-w-[320px]">
-              {imageLoading && <Skeleton className="w-full h-[200px] rounded-md absolute" />}
+            <div className="mt-2 relative max-w-[320px] w-full bg-muted rounded-md overflow-hidden">
               <Image
                 src={message.imageUrl}
                 alt="Attached Image"
-                width={320}
-                height={200}
+                width={640}
+                height={360}
                 sizes="(max-width: 768px) 100vw, 320px"
                 className="rounded-md border border-border w-full h-auto object-cover cursor-pointer hover:opacity-90 transition-opacity"
                 onClick={() => setIsImageOpen(true)}
-                onLoadingComplete={() => setImageLoading(false)}
-                onError={() => setImageLoading(false)}
-                priority={false}
+                onLoad={onImageLoad}
               />
             </div>
           )}
@@ -80,7 +76,7 @@ export function MessageItem({ message }: MessageItemProps) {
             <DialogTitle></DialogTitle>
             <DialogDescription></DialogDescription>
           </DialogHeader>
-          <div className="relative w-full h-[90vh]">
+          <div className="relative w-full h-[80vh]">
             <Image
               src={message.imageUrl || ''}
               alt="Full Size Image"

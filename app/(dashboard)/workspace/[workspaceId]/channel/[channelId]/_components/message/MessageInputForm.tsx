@@ -33,6 +33,7 @@ export function MessageInputForm({ channelId }: MessageInputFormProps) {
           queryKey: orpc.message.list.key(),
         });
         form.reset();
+        upload.reset();
         toast.success('Message sent successfully!');
       },
       onError: () => {

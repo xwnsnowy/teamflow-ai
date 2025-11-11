@@ -21,6 +21,8 @@ export function MessagesList() {
   const prevScrollHeightRef = useRef(0);
   const isNearBottomRef = useRef(true);
   const lastMessageIdRef = useRef<string | null>(null);
+  const pendingScrollRef = useRef(false);
+  const imageLoadingRef = useRef(new Set<string>());
 
   const infiniteQueryOptions = orpc.message.list.infiniteOptions({
     input: (pageParam: string | undefined) => ({
@@ -50,13 +52,28 @@ export function MessagesList() {
 
   const messages = useMemo(() => data?.pages.flatMap((page) => page.items) ?? [], [data?.pages]);
 
-  // Track the last message ID separately to ensure effect triggers
   const lastMessageId = messages[messages.length - 1]?.id;
   const lastMessageAuthorId = messages[messages.length - 1]?.authorId;
 
   const checkIfNearBottom = (container: HTMLDivElement, threshold = 150) => {
     const scrollBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
     return scrollBottom < threshold;
+  };
+
+  // Force scroll to bottom helper
+  const forceScrollToBottom = (smooth = false) => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    if (smooth) {
+      container.scrollTo({
+        top: container.scrollHeight,
+        behavior: 'smooth',
+      });
+    } else {
+      container.scrollTop = container.scrollHeight;
+    }
+    isNearBottomRef.current = true;
   };
 
   // Track scroll position
@@ -81,7 +98,10 @@ export function MessagesList() {
     if (!container || messages.length === 0) return;
 
     if (!hasInitialScrolled) {
-      container.scrollTop = container.scrollHeight;
+      // Initial scroll - wait a bit for images
+      setTimeout(() => {
+        forceScrollToBottom(false);
+      }, 100);
       setHasInitialScrolled(true);
       prevMessagesLengthRef.current = messages.length;
       prevScrollHeightRef.current = container.scrollHeight;
@@ -95,35 +115,36 @@ export function MessagesList() {
     if (messagesAdded > 0) {
       const latestMessage = messages[messages.length - 1];
       const currentLastMessageId = latestMessage?.id;
-
-      // Check if it's new messages at the bottom (not loading older messages)
       const isNewMessageAtBottom = currentLastMessageId !== lastMessageIdRef.current;
 
       if (isNewMessageAtBottom) {
-        // New messages at bottom
         const isMyMessage = latestMessage?.authorId === user.id;
 
-        // Always scroll if it's my message, or if user is near bottom
         if (isMyMessage || isNearBottomRef.current) {
-          // Use instant scroll for own messages to avoid timing issues
+          pendingScrollRef.current = true;
+
+          // For my messages, scroll immediately and keep trying
           if (isMyMessage) {
-            container.scrollTop = container.scrollHeight;
-            isNearBottomRef.current = true;
+            forceScrollToBottom(false);
+            // Keep scrolling as content loads
+            const scrollInterval = setInterval(() => {
+              forceScrollToBottom(false);
+            }, 50);
+
+            setTimeout(() => {
+              clearInterval(scrollInterval);
+              pendingScrollRef.current = false;
+            }, 2000); // Keep scrolling for 2 seconds
           } else {
-            container.scrollTo({
-              top: container.scrollHeight,
-              behavior: 'smooth',
-            });
+            forceScrollToBottom(true);
+            setTimeout(() => {
+              pendingScrollRef.current = false;
+            }, 1000);
           }
-        } else {
-          console.log('⏸️ Not scrolling - user scrolled up');
         }
 
-        // Always update lastMessageIdRef for new messages
         lastMessageIdRef.current = currentLastMessageId;
       } else {
-        console.log('📜 Loading older messages');
-
         // Loading older messages - maintain scroll position
         const heightDifference = container.scrollHeight - prevScrollHeightRef.current;
         if (heightDifference > 0) {
@@ -136,33 +157,86 @@ export function MessagesList() {
     prevScrollHeightRef.current = container.scrollHeight;
   }, [messages, messages.length, hasInitialScrolled, user.id]);
 
-  // Separate effect specifically for handling new messages
+  // Enhanced image loading handler
   useEffect(() => {
     const container = scrollContainerRef.current;
-    if (!container || !hasInitialScrolled || !lastMessageId) return;
+    if (!container) return;
 
-    // Check if this is a new message (not loading older ones)
-    if (lastMessageId !== lastMessageIdRef.current && lastMessageIdRef.current !== null) {
-      const isMyMessage = lastMessageAuthorId === user.id;
+    const handleImageLoad = (img: HTMLImageElement) => {
+      const imgSrc = img.src;
+      imageLoadingRef.current.delete(imgSrc);
 
-      if (isMyMessage || isNearBottomRef.current) {
-        if (isMyMessage) {
+      // Scroll if we should
+      if (pendingScrollRef.current || isNearBottomRef.current) {
+        console.log('🖼️ Image loaded, scrolling to bottom');
+        requestAnimationFrame(() => {
+          forceScrollToBottom(false);
+        });
+      }
+    };
+
+    const handleImageError = (img: HTMLImageElement) => {
+      const imgSrc = img.src;
+      imageLoadingRef.current.delete(imgSrc);
+    };
+
+    // Get all images
+    const images = container.querySelectorAll('img');
+
+    images.forEach((img) => {
+      const imgSrc = img.src;
+
+      if (!img.complete) {
+        // Image is loading
+        imageLoadingRef.current.add(imgSrc);
+
+        const onLoad = () => {
+          handleImageLoad(img);
+          img.removeEventListener('load', onLoad);
+          img.removeEventListener('error', onError);
+        };
+
+        const onError = () => {
+          handleImageError(img);
+          img.removeEventListener('load', onLoad);
+          img.removeEventListener('error', onError);
+        };
+
+        img.addEventListener('load', onLoad);
+        img.addEventListener('error', onError);
+      } else if (img.naturalHeight === 0) {
+        // Image failed to load
+        imageLoadingRef.current.delete(imgSrc);
+      } else {
+        // Image already loaded, scroll now if needed
+        if (pendingScrollRef.current || isNearBottomRef.current) {
           requestAnimationFrame(() => {
-            container.scrollTop = container.scrollHeight;
-            isNearBottomRef.current = true;
-          });
-        } else {
-          console.log('🌊 [New Effect] Smooth scroll for others message');
-          container.scrollTo({
-            top: container.scrollHeight,
-            behavior: 'smooth',
+            forceScrollToBottom(false);
           });
         }
       }
+    });
 
-      lastMessageIdRef.current = lastMessageId;
-    }
-  }, [lastMessageId, lastMessageAuthorId, hasInitialScrolled, user.id]);
+    // Also use MutationObserver to catch newly added images
+    const observer = new MutationObserver(() => {
+      if (pendingScrollRef.current || isNearBottomRef.current) {
+        requestAnimationFrame(() => {
+          forceScrollToBottom(false);
+        });
+      }
+    });
+
+    observer.observe(container, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['src', 'height'],
+    });
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [messages.length]);
 
   // Intersection Observer for infinite scroll
   useEffect(() => {
@@ -186,14 +260,7 @@ export function MessagesList() {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const scrollToBottom = () => {
-    const container = scrollContainerRef.current;
-    if (container) {
-      container.scrollTo({
-        top: container.scrollHeight,
-        behavior: 'smooth',
-      });
-      isNearBottomRef.current = true;
-    }
+    forceScrollToBottom(true);
   };
 
   if (isLoading) {
@@ -221,7 +288,17 @@ export function MessagesList() {
           </div>
         )}
         {messages.map((message) => (
-          <MessageItem key={message.id} message={message} />
+          <MessageItem
+            key={message.id}
+            message={message}
+            onImageLoad={() => {
+              if (pendingScrollRef.current || isNearBottomRef.current) {
+                requestAnimationFrame(() => {
+                  forceScrollToBottom(false);
+                });
+              }
+            }}
+          />
         ))}
       </div>
 
