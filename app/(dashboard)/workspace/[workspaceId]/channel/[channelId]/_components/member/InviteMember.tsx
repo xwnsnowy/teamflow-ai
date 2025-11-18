@@ -15,15 +15,19 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { orpc } from '@/lib/orpc';
 import { inviteMemberSchema, InviteMemberType } from '@/schemas/member';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { isDefinedError } from '@orpc/client';
 import { DialogTitle } from '@radix-ui/react-dialog';
+import { useMutation } from '@tanstack/react-query';
 import { UserPlus } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
 
 export default function InviteMember() {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
 
   const form = useForm<InviteMemberType>({
     resolver: zodResolver(inviteMemberSchema),
@@ -33,8 +37,26 @@ export default function InviteMember() {
     },
   });
 
+  const inviteMemberMutation = useMutation(
+    orpc.workspace.member.invite.mutationOptions({
+      onSuccess: () => {
+        toast.success('Invitations sent successfully!');
+        setOpen(false);
+        form.reset();
+      },
+      onError: (error) => {
+        if (isDefinedError(error)) {
+          toast.error(`Error: ${error.message}`);
+          return;
+        }
+
+        toast.error('Failed to invite members. Please try again.');
+      },
+    }),
+  );
+
   function onSubmit(values: InviteMemberType) {
-    console.log(values);
+    inviteMemberMutation.mutate(values);
   }
 
   return (
