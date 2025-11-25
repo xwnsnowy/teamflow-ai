@@ -1,8 +1,8 @@
 'use client';
 import Link from 'next/link';
 import { Menu, X } from 'lucide-react';
-import { Button, buttonVariants } from '@/components/ui/button';
-import React from 'react';
+import { buttonVariants } from '@/components/ui/button';
+import React, { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { RegisterLink, LoginLink, LogoutLink } from '@kinde-oss/kinde-auth-nextjs/components';
@@ -17,12 +17,12 @@ const menuItems = [
 ];
 
 export const HeroHeader = () => {
-  const [menuState, setMenuState] = React.useState(false);
-  const [isScrolled, setIsScrolled] = React.useState(false);
+  const [menuState, setMenuState] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const { getUser, isLoading } = useKindeBrowserClient();
   const user = getUser();
 
-  React.useEffect(() => {
+  useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
     };

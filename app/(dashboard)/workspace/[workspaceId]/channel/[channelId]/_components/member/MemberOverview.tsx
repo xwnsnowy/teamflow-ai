@@ -70,8 +70,11 @@ export function MemberOverview() {
                   className="animate-pulse flex items-center justify-center p-3 space-x-4"
                 >
                   <Skeleton className="size-8 rounded-full" />
-                  <div className="flex-1 space-y-2">
-                    <Skeleton className="h-4 w-3/4 rounded" />
+                  <div className="flex-1 space-x-2">
+                    <div>
+                      <Skeleton className="h-4 w-3/4 rounded" />
+                      <Skeleton className="h-3 w-1/2 rounded" />
+                    </div>
                     <Skeleton className="h-3 w-1/2 rounded" />
                   </div>
                 </div>
