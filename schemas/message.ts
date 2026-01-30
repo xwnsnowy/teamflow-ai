@@ -1,4 +1,3 @@
-import { updateMessage } from './../app/router/message';
 import z from 'zod';
 
 export const createMessageChannelSchema = z.object({
