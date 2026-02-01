@@ -18,15 +18,19 @@ import { orpc } from '@/lib/orpc';
 import { toast } from 'sonner';
 import { UpdateMessageType } from '@/schemas/message';
 import { EditMessage } from '../toolbar/EditMessage';
+import { MessageListItem } from '@/lib/types';
+import { MessagesSquare } from 'lucide-react';
+import { useThread } from '@/providers/ThreadProvider';
 
 interface MessageItemProps {
-  message: Message;
+  message: MessageListItem;
   onImageLoad?: () => void;
 }
 
 export function MessageItem({ message, onImageLoad }: MessageItemProps) {
   const [isImageOpen, setIsImageOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const { tooggleThread } = useThread();
 
   const queryClient = useQueryClient();
 
@@ -116,6 +120,17 @@ export function MessageItem({ message, onImageLoad }: MessageItemProps) {
                     onLoad={onImageLoad}
                   />
                 </div>
+              )}
+
+              {message.repliesCount > 0 && (
+                <button
+                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-border cursor-pointer"
+                  onClick={() => tooggleThread(message.id)}
+                >
+                  <MessagesSquare className="size-3.5" />
+                  <span>{message.repliesCount}</span>
+                  <span>{message.repliesCount === 1 ? 'Reply' : 'Replies'}</span>
+                </button>
               )}
             </>
           )}

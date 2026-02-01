@@ -8,6 +8,7 @@ import { useQuery } from '@tanstack/react-query';
 import { orpc } from '@/lib/orpc';
 import { RichTextViewer } from '@/components/rich-text-editor/RichTextViewer';
 import { KindeUser } from '@kinde-oss/kinde-auth-nextjs';
+import { ThreadSidebarSkeleton } from './ThreadSidebarSkeleton';
 
 interface ThreadSidebarProps {
   user: KindeUser<Record<string, unknown>>;
@@ -22,6 +23,8 @@ export function ThreadSidebar({ user }: ThreadSidebarProps) {
       enabled: Boolean(selectedThreadId),
     }),
   );
+
+  if (isLoading) return <ThreadSidebarSkeleton />;
 
   return (
     <div className="w-[30rem] border-l flex flex-col h-full">

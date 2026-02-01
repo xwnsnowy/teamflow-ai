@@ -8,6 +8,7 @@ import { createMessageChannelSchema, updateMessageSchema } from '@/schemas/messa
 import { getAvatar } from '@/lib/get-avatar';
 import z from 'zod';
 import { Message } from '@/lib/generated/prisma/client';
+import { MessageListItem } from '@/lib/types';
 
 export const createMessageChannel = base
   .use(requiredAuthMiddleware)
@@ -94,7 +95,7 @@ export const listMessages = base
   )
   .output(
     z.object({
-      items: z.array(z.custom<Message>()),
+      items: z.array(z.custom<MessageListItem>()),
       nextCursor: z.string().optional(),
       hasMore: z.boolean(),
     }),
@@ -126,6 +127,13 @@ export const listMessages = base
           id: 'desc',
         },
       ],
+      include: {
+        _count: {
+          select: {
+            replies: true,
+          },
+        },
+      },
       take: limit + 1,
       ...(input.cursor && {
         cursor: { id: input.cursor },
@@ -137,7 +145,12 @@ export const listMessages = base
     const hasMore = messages.length > limit;
 
     // Remove the extra item if exists
-    const items = hasMore ? messages.slice(0, limit) : messages;
+    const sliced = hasMore ? messages.slice(0, limit) : messages;
+
+    const items: MessageListItem[] = sliced.map((m) => ({
+      ...m,
+      repliesCount: m._count.replies,
+    }));
 
     // Get the last item's ID as next cursor
     const nextCursor = hasMore && items.length > 0 ? items[items.length - 1].id : undefined;
