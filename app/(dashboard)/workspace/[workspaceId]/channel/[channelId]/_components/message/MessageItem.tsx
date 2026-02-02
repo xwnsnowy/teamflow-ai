@@ -4,7 +4,7 @@ import { Message } from '@/lib/generated/prisma/client';
 import { getAvatar } from '@/lib/get-avatar';
 import Image from 'next/image';
 import { RichTextViewer } from '@/components/rich-text-editor/RichTextViewer';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -68,6 +68,16 @@ export function MessageItem({ message, onImageLoad }: MessageItemProps) {
     await updateMessage(data);
   };
 
+  const prefetchThread = useCallback(() => {
+    const options = orpc.message.thread.list.queryOptions({
+      input: {
+        messageId: message.id,
+      },
+    });
+
+    queryClient.prefetchQuery({ ...options, staleTime: 60000 }).catch(() => {});
+  }, [message.id, queryClient]);
+
   return (
     <>
       <div className="flex space-x-3 relative p-3 rounded-lg group hover:bg-muted/50 transition-colors">
@@ -126,6 +136,8 @@ export function MessageItem({ message, onImageLoad }: MessageItemProps) {
                 <button
                   className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-border cursor-pointer"
                   onClick={() => tooggleThread(message.id)}
+                  onMouseEnter={prefetchThread}
+                  onFocus={prefetchThread}
                 >
                   <MessagesSquare className="size-3.5" />
                   <span>{message.repliesCount}</span>

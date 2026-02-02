@@ -15,9 +15,10 @@ interface ThreadReplyProps {
     authorName: string;
     authorAvatar: string;
   };
+  onImageLoad?: () => void;
 }
 
-export function ThreadReply({ message }: ThreadReplyProps) {
+export function ThreadReply({ message, onImageLoad }: ThreadReplyProps) {
   return (
     <div className="flex space-x-3 p-3 hover:bg-muted/30 rounded-lg">
       <Image
@@ -26,6 +27,7 @@ export function ThreadReply({ message }: ThreadReplyProps) {
         width={32}
         height={32}
         className="size-8 rounded-full shrink-0 mt-1"
+        onLoad={onImageLoad}
       />
       <div className="flex-1 space-y-1 min-w-0">
         <div className="flex items-center space-x-2">

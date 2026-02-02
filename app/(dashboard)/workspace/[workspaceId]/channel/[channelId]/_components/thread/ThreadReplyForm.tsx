@@ -7,7 +7,7 @@ import { useParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { MessageComposer } from '../message/MessageComposer';
 import { useAttachmentUpload } from '@/lib/use-attachment-upload';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { orpc } from '@/lib/orpc';
 import { toast } from 'sonner';
@@ -35,9 +35,11 @@ export function ThreadReplyForm({ threadId, user }: ThreadReplyFormProps) {
     },
   });
 
+  // Update form values when threadId or channelId changes
   useEffect(() => {
     form.setValue('threadId', threadId);
-  }, [threadId, form]);
+    form.setValue('channelId', channelId);
+  }, [threadId, channelId, form]);
 
   const createMessageMutation = useMutation(
     orpc.message.create.mutationOptions({
@@ -85,7 +87,12 @@ export function ThreadReplyForm({ threadId, user }: ThreadReplyFormProps) {
       onSuccess: (_data, _vars, ctx) => {
         queryClient.invalidateQueries({ queryKey: ctx.listOptions.queryKey });
 
-        form.reset({ channelId, content: '', threadId: '' });
+        // Reset only content, keep threadId and channelId
+        form.reset({
+          content: '',
+          channelId: channelId,
+          threadId: threadId,
+        });
         upload.reset();
 
         toast.success('Message sent successfully!');
@@ -126,6 +133,7 @@ export function ThreadReplyForm({ threadId, user }: ThreadReplyFormProps) {
                   onChange={field.onChange}
                   upload={upload}
                   onSubmit={() => onSubmit(form.getValues())}
+                  isPending={createMessageMutation.isPending}
                 />
               </FormControl>
             </FormItem>
