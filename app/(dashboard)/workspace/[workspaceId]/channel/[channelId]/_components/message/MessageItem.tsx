@@ -21,6 +21,7 @@ import { EditMessage } from '../toolbar/EditMessage';
 import { MessageListItem } from '@/lib/types';
 import { MessagesSquare } from 'lucide-react';
 import { useThread } from '@/providers/ThreadProvider';
+import { ReactionsBar } from '../reaction/ReactionsBar';
 
 interface MessageItemProps {
   message: MessageListItem;
@@ -131,6 +132,8 @@ export function MessageItem({ message, onImageLoad }: MessageItemProps) {
                   />
                 </div>
               )}
+
+              <ReactionsBar messageId={message.id} reactions={message.reactions} />
 
               {message.repliesCount > 0 && (
                 <button

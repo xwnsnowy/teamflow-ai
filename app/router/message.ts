@@ -1,14 +1,47 @@
+import { GroupedReactionsSchema, GroupedReactionsSchemaType } from './../../schemas/message';
 import prisma from '@/lib/db';
 import { standardSecurityMiddleware } from '../middlewares/arcjet/standard';
 import { writeSecurityMiddleware } from '../middlewares/arcjet/write';
 import { requiredAuthMiddleware } from '../middlewares/auth';
 import { base } from '../middlewares/base';
 import { requiredWorkspaceMiddleware } from '../middlewares/workspace';
-import { createMessageChannelSchema, updateMessageSchema } from '@/schemas/message';
+import {
+  createMessageChannelSchema,
+  toggleReactionSchema,
+  updateMessageSchema,
+} from '@/schemas/message';
 import { getAvatar } from '@/lib/get-avatar';
 import z from 'zod';
 import { Message } from '@/lib/generated/prisma/client';
 import { MessageListItem } from '@/lib/types';
+
+function groupReactions(
+  reactions: { emoji: string; userId: string }[],
+  userId: string,
+): GroupedReactionsSchemaType[] {
+  const reactionMap = new Map<string, { count: number; reactedByUser: boolean }>();
+
+  for (const reaction of reactions) {
+    const existing = reactionMap.get(reaction.emoji);
+    if (existing) {
+      existing.count += 1;
+      if (reaction.userId === userId) {
+        existing.reactedByUser = true;
+      }
+    } else {
+      reactionMap.set(reaction.emoji, {
+        count: 1,
+        reactedByUser: reaction.userId === userId,
+      });
+    }
+  }
+
+  return Array.from(reactionMap.entries()).map(([emoji, data]) => ({
+    emoji,
+    count: data.count,
+    reactedByUser: data.reactedByUser,
+  }));
+}
 
 export const createMessageChannel = base
   .use(requiredAuthMiddleware)
@@ -133,6 +166,12 @@ export const listMessages = base
             replies: true,
           },
         },
+        messsageReactions: {
+          select: {
+            emoji: true,
+            userId: true,
+          },
+        },
       },
       take: limit + 1,
       ...(input.cursor && {
@@ -150,6 +189,10 @@ export const listMessages = base
     const items: MessageListItem[] = sliced.map((m) => ({
       ...m,
       repliesCount: m._count.replies,
+      reactions: groupReactions(
+        m.messsageReactions.map((r) => ({ emoji: r.emoji, userId: r.userId })),
+        context.user.id,
+      ),
     }));
 
     // Get the last item's ID as next cursor
@@ -263,4 +306,98 @@ export const listThreadReplies = base
     }));
 
     return { parent, messages };
+  });
+
+export const toggleReaction = base
+  .use(requiredAuthMiddleware)
+  .use(requiredWorkspaceMiddleware)
+  .use(standardSecurityMiddleware)
+  .use(writeSecurityMiddleware)
+  .route({
+    method: 'POST',
+    path: '/message/:messageId/reaction',
+    summary: 'Toggle reaction to a message',
+    tags: ['message'],
+  })
+  .input(toggleReactionSchema)
+  .output(
+    z.object({
+      messageId: z.string(),
+      reaction: z.array(GroupedReactionsSchema),
+    }),
+  )
+  .handler(async ({ input, context, errors }) => {
+    const message = await prisma.message.findFirst({
+      where: {
+        id: input.messageId,
+        channel: {
+          workspaceId: context.workspace.orgCode,
+        },
+      },
+      select: {
+        id: true,
+        authorId: true,
+      },
+    });
+
+    if (!message) {
+      throw errors.NOT_FOUND();
+    }
+
+    const inserted = await prisma.messageReaction.createMany({
+      data: {
+        emoji: input.emoji,
+        messageId: input.messageId,
+        userId: context.user.id,
+        userName:
+          context.user.given_name && context.user.family_name
+            ? context.user.given_name + ' ' + context.user.family_name
+            : 'Tommy',
+        userAvatar: getAvatar(context.user.picture, context.user.email!),
+        userEmail: context.user.email!,
+      },
+      skipDuplicates: true,
+    });
+
+    if (inserted.count === 0) {
+      // reaction already exists, remove it
+      await prisma.messageReaction.deleteMany({
+        where: {
+          messageId: input.messageId,
+          userId: context.user.id,
+          emoji: input.emoji,
+        },
+      });
+    }
+
+    const updated = await prisma.message.findUnique({
+      where: {
+        id: input.messageId,
+      },
+      include: {
+        messsageReactions: {
+          select: {
+            emoji: true,
+            userId: true,
+          },
+        },
+        _count: {
+          select: {
+            replies: true,
+          },
+        },
+      },
+    });
+
+    if (!updated) {
+      throw errors.NOT_FOUND();
+    }
+
+    return {
+      messageId: updated.id,
+      reaction: groupReactions(
+        (updated.messsageReactions ?? []).map((r) => ({ emoji: r.emoji, userId: r.userId })),
+        context.user.id,
+      ),
+    };
   });
