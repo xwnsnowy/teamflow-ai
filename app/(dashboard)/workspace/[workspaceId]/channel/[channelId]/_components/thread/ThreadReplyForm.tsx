@@ -11,7 +11,6 @@ import { useEffect } from 'react';
 import { InfiniteData, useMutation, useQueryClient } from '@tanstack/react-query';
 import { orpc } from '@/lib/orpc';
 import { toast } from 'sonner';
-import { Message } from '@/lib/generated/prisma/client';
 import { KindeUser } from '@kinde-oss/kinde-auth-nextjs';
 import { getAvatar } from '@/lib/get-avatar';
 import { MessageListItem } from '@/lib/types';
@@ -20,6 +19,18 @@ interface ThreadReplyFormProps {
   threadId: string;
   user: KindeUser<Record<string, unknown>>;
 }
+
+type MessagePage = {
+  items: Array<MessageListItem>;
+  nextCursor: string | null;
+};
+
+type InfiniteMessages = InfiniteData<MessagePage>;
+
+type ThreadData = {
+  parent: MessageListItem;
+  messages: MessageListItem[];
+};
 
 export function ThreadReplyForm({ threadId, user }: ThreadReplyFormProps) {
   const { channelId } = useParams<{ channelId: string }>();
@@ -45,26 +56,17 @@ export function ThreadReplyForm({ threadId, user }: ThreadReplyFormProps) {
   const createMessageMutation = useMutation(
     orpc.message.create.mutationOptions({
       onMutate: async (data) => {
-        const listOptions = orpc.message.thread.list.queryOptions({
-          input: {
-            messageId: threadId,
-          },
-        });
+        // Use the same query key format as ReactionsBar
+        const threadQueryKey = ['messages', 'thread', threadId];
+        const listQueryKey = ['messages', 'list', channelId];
 
-        type MessagePage = {
-          items: Array<MessageListItem>;
-          nextCursor: string | null;
-        };
+        await queryClient.cancelQueries({ queryKey: threadQueryKey });
+        await queryClient.cancelQueries({ queryKey: listQueryKey });
 
-        type InfinitieMessages = InfiniteData<MessagePage>;
+        const previousThread = queryClient.getQueryData<ThreadData>(threadQueryKey);
+        const previousList = queryClient.getQueryData<InfiniteMessages>(listQueryKey);
 
-        await queryClient.cancelQueries({
-          queryKey: listOptions.queryKey,
-        });
-
-        const previousMessages = queryClient.getQueryData(listOptions.queryKey);
-
-        const optimistic: Message = {
+        const optimistic: MessageListItem = {
           id: `optimistic-${crypto.randomUUID()}`,
           content: data.content,
           createdAt: new Date(),
@@ -76,9 +78,12 @@ export function ThreadReplyForm({ threadId, user }: ThreadReplyFormProps) {
           channelId: data.channelId,
           threadId: data.threadId!,
           imageUrl: data.imageUrl ?? null,
+          replyCount: 0,
+          reactions: [],
         };
 
-        queryClient.setQueryData(listOptions.queryKey, (old) => {
+        // Optimistic update for thread replies - use correct structure
+        queryClient.setQueryData<ThreadData>(threadQueryKey, (old) => {
           if (!old) return old;
           return {
             ...old,
@@ -86,40 +91,42 @@ export function ThreadReplyForm({ threadId, user }: ThreadReplyFormProps) {
           };
         });
 
-        // optimistic buump repliesCount in main message list for the parent message
-        queryClient.setQueryData<InfinitieMessages>(
-          ['messages', 'list', channelId],
-          (oldData: any) => {
-            if (!oldData) return oldData;
+        // Optimistic bump replyCount in main message list for the parent message
+        queryClient.setQueryData<InfiniteMessages>(listQueryKey, (oldData) => {
+          if (!oldData) return oldData;
 
-            const pages = oldData.pages.map((page: { items: any[] }) => ({
-              ...page,
-              items: page.items.map((msg) => {
-                if (msg.id === threadId) {
-                  return {
-                    ...msg,
-                    repliesCount: (msg.repliesCount || 0) + 1,
-                  };
-                }
-                return msg;
-              }),
-            }));
+          const pages = oldData.pages.map((page) => ({
+            ...page,
+            items: page.items.map((msg) => {
+              if (msg.id === threadId) {
+                return {
+                  ...msg,
+                  replyCount: (msg.replyCount || 0) + 1,
+                };
+              }
+              return msg;
+            }),
+          }));
 
-            return {
-              ...oldData,
-              pages,
-            };
-          },
-        );
+          return {
+            ...oldData,
+            pages,
+          };
+        });
 
         return {
-          listOptions,
-          previousMessages,
+          threadQueryKey,
+          listQueryKey,
+          previousThread,
+          previousList,
         };
       },
 
       onSuccess: (_data, _vars, ctx) => {
-        queryClient.invalidateQueries({ queryKey: ctx.listOptions.queryKey });
+        if (ctx) {
+          queryClient.invalidateQueries({ queryKey: ctx.threadQueryKey });
+          queryClient.invalidateQueries({ queryKey: ctx.listQueryKey });
+        }
 
         // Reset only content, keep threadId and channelId
         form.reset({
@@ -135,10 +142,13 @@ export function ThreadReplyForm({ threadId, user }: ThreadReplyFormProps) {
       onError: (_err, _vars, ctx) => {
         if (!ctx) return;
 
-        const { listOptions, previousMessages } = ctx;
+        const { threadQueryKey, listQueryKey, previousThread, previousList } = ctx;
 
-        if (previousMessages) {
-          queryClient.setQueryData(listOptions.queryKey, previousMessages);
+        if (previousThread) {
+          queryClient.setQueryData(threadQueryKey, previousThread);
+        }
+        if (previousList) {
+          queryClient.setQueryData(listQueryKey, previousList);
         }
 
         return toast.error('Something went wrong.');

@@ -188,7 +188,7 @@ export const listMessages = base
 
     const items: MessageListItem[] = sliced.map((m) => ({
       ...m,
-      repliesCount: m._count.replies,
+      replyCount: m._count.replies,
       reactions: groupReactions(
         m.messsageReactions.map((r) => ({ emoji: r.emoji, userId: r.userId })),
         context.user.id,
@@ -335,7 +335,7 @@ export const listThreadReplies = base
       updatedAt: parentRow.updatedAt,
       channelId: parentRow.channelId,
       threadId: parentRow.threadId,
-      repliesCount: parentRow._count.replies,
+      replyCount: parentRow._count.replies,
       reactions: groupReactions(
         parentRow.messsageReactions.map((r) => ({ emoji: r.emoji, userId: r.userId })),
         context.user.id,
@@ -344,7 +344,7 @@ export const listThreadReplies = base
 
     const messages: MessageListItem[] = replies.map((m) => ({
       ...m,
-      repliesCount: m._count.replies,
+      replyCount: m._count.replies,
       reactions: groupReactions(
         m.messsageReactions.map((r) => ({ emoji: r.emoji, userId: r.userId })),
         context.user.id,

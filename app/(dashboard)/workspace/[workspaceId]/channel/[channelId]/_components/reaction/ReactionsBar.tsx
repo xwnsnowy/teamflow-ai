@@ -166,7 +166,7 @@ export function ReactionsBar({ messageId, reactions, context }: ReactionsBarProp
 
   return (
     <div className="mt-1 flex items-center gap-1">
-      {reactions.map((reaction) => (
+      {(reactions || []).map((reaction) => (
         <Button
           key={reaction.emoji}
           variant={reaction.reactedByUser ? 'secondary' : 'outline'}

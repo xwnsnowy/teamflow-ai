@@ -139,7 +139,7 @@ export function MessageItem({ message, onImageLoad }: MessageItemProps) {
                 context={{ type: 'list', channelId: message.channelId }}
               />
 
-              {message.repliesCount > 0 && (
+              {message.replyCount > 0 && (
                 <button
                   className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-border cursor-pointer"
                   onClick={() => tooggleThread(message.id)}
@@ -147,8 +147,8 @@ export function MessageItem({ message, onImageLoad }: MessageItemProps) {
                   onFocus={prefetchThread}
                 >
                   <MessagesSquare className="size-3.5" />
-                  <span>{message.repliesCount}</span>
-                  <span>{message.repliesCount === 1 ? 'Reply' : 'Replies'}</span>
+                  <span>{message.replyCount}</span>
+                  <span>{message.replyCount === 1 ? 'Reply' : 'Replies'}</span>
                 </button>
               )}
             </>
