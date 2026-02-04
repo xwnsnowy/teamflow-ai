@@ -4,6 +4,8 @@ import { Toggle } from '../ui/toggle';
 import { Bold, Code, Italic, ListIcon, ListOrdered, Redo, Strikethrough, Undo } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '../ui/button';
+import { ComposeAssistant } from './ComposeAssistant';
+import { markdownToJson } from '@/lib/markdown-to-json';
 
 interface MenuBarProps {
   editor: Editor | null;
@@ -16,22 +18,36 @@ export function MenuBar({ editor }: MenuBarProps) {
       if (!editor) {
         return null;
       }
-      return {
-        canUndo: editor.can().undo(),
-        canRedo: editor.can().redo(),
-        isBold: editor.isActive('bold'),
-        isItalic: editor.isActive('italic'),
-        isStrike: editor.isActive('strike'),
-        isCodeBlock: editor.isActive('codeBlock'),
-        isBulletList: editor.isActive('bulletList'),
-        isOrderedList: editor.isActive('orderedList'),
-      };
+      try {
+        return {
+          canUndo: editor.can().undo(),
+          canRedo: editor.can().redo(),
+          isBold: editor.isActive('bold'),
+          isItalic: editor.isActive('italic'),
+          isStrike: editor.isActive('strike'),
+          isCodeBlock: editor.isActive('codeBlock'),
+          isBulletList: editor.isActive('bulletList'),
+          isOrderedList: editor.isActive('orderedList'),
+        };
+      } catch (error) {
+        console.error('Error getting editor state:', error);
+        return null;
+      }
     },
   });
 
   if (!editor) {
     return null;
   }
+
+  const handleAcceptCompose = (markdown: string) => {
+    try {
+      const json = markdownToJson(markdown);
+      editor.commands.setContent(json);
+    } catch (error) {
+      console.error('Error converting markdown to JSON:', error);
+    }
+  };
 
   return (
     <div className="border border-t-0 border-x-0 rounded-t-lg p-2 bg-card flex flex-wrap gap-1 items-center">
@@ -160,6 +176,11 @@ export function MenuBar({ editor }: MenuBarProps) {
             </TooltipTrigger>
             <TooltipContent side="top">Redo</TooltipContent>
           </Tooltip>
+        </div>
+
+        <div className="w-px h-6 bg-border mx-2"></div>
+        <div className="flex flex-wrap gap-1">
+          <ComposeAssistant editor={editor} onAccept={handleAcceptCompose} />
         </div>
       </TooltipProvider>
     </div>

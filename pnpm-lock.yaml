@@ -137,6 +137,9 @@ importers:
       lucide-react:
         specifier: ^0.546.0
         version: 0.546.0(react@19.1.0)
+      markdown-it:
+        specifier: ^14.1.0
+        version: 14.1.0
       motion:
         specifier: ^12.23.24
         version: 12.23.24(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -183,6 +186,9 @@ importers:
       '@tanstack/eslint-plugin-query':
         specifier: ^5.91.2
         version: 5.91.2(eslint@9.38.0(jiti@2.6.1))(typescript@5.9.3)
+      '@types/markdown-it':
+        specifier: ^14.1.2
+        version: 14.1.2
       '@types/node':
         specifier: ^20
         version: 20.19.22

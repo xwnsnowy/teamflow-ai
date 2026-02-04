@@ -126,3 +126,50 @@ Guidelines:
 
     return streamToEventIterator(result.toUIMessageStream());
   });
+
+export const generateCompose = base
+  .use(requiredAuthMiddleware)
+  .use(requiredWorkspaceMiddleware)
+  .route({
+    method: 'POST',
+    path: '/ai/compose/generate',
+    summary: 'Generate compose',
+    tags: ['AI'],
+  })
+  .input(
+    z.object({
+      content: z.string(),
+    }),
+  )
+  .handler(async ({ input }) => {
+    const markdown = await tiptapJsonToMarkdown(input.content);
+
+    const system = [
+      'You are an expert rewriting assistant. You are not a chatbot.',
+      'Task: Rewrite the provided content to be clearer and better structured while preserving meaning, facts, terminology, and names.',
+      'Do not address the user, ask questions, add greetings, or include commentary.',
+      'Keep existing links/mentions intact. Do not change code blocks or inline code content.',
+      'Output strictly in Markdown (paragraphs and optional bullet lists). Do not output any HTML or images.',
+      'Return ONLY the rewritten content. No preamble, headings, or closing remarks.',
+    ].join('\n');
+
+    const result = streamText({
+      model,
+      system,
+      messages: [
+        {
+          role: 'user',
+          content:
+            'Please rewrite the following message to make it more professional and engaging:\n\n' +
+            markdown,
+        },
+        {
+          role: 'user',
+          content: markdown,
+        },
+      ],
+      temperature: 0,
+    });
+
+    return streamToEventIterator(result.toUIMessageStream());
+  });
