@@ -71,3 +71,7 @@ export const aiSecurityMiddleware = base
 
     return next();
   });
+
+//   Luồng hoạt động: Khi một request đến, middleware gọi Arcjet để kiểm tra. Nếu pass, tiếp tục; nếu fail, throw lỗi với thông báo cụ thể.
+// Lý do sử dụng: Bảo vệ chống bot, rate limiting, WAF, và sensitive info trong ứng dụng B2B AI SaaS, đảm bảo an toàn cho user và hệ thống.
+// Lưu ý: Code sử dụng TypeScript, tích hợp với Next.js và Kinde Auth. Nếu cần sửa đổi, hãy đảm bảo test kỹ trong môi trường LIVE để tránh block hợp lệ. Nếu bạn có câu hỏi cụ thể về phần nào, hãy hỏi!

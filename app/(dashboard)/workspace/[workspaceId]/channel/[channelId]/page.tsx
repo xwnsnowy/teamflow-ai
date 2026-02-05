@@ -11,6 +11,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ThreadSidebar } from './_components/thread/ThreadSidebar';
 import { ThreadProvider, useThread } from '@/providers/ThreadProvider';
 
+interface ChannelData {
+  channelName: string;
+  currentUser: KindeUser<Record<string, unknown>>;
+}
+
 const ChannelPageMain = () => {
   const { channelId } = useParams<{ channelId: string }>();
 
@@ -42,7 +47,7 @@ const ChannelPageMain = () => {
             </div>
           </div>
         ) : (
-          <ChannelHeader />
+          <ChannelHeader channel={data as ChannelData} />
         )}
 
         {/* Scorll message area */}
