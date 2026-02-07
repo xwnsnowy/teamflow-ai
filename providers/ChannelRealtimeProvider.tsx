@@ -123,6 +123,36 @@ export function ChannelRealtimeProvider({ channelId, children }: ChannelRealtime
             },
           );
         }
+
+        if (event.type === 'message:replies:incremented') {
+          const { messageId, delta } = event.payload;
+
+          queryClient.setQueryData<InfiniteMessages>(
+            ['messages', 'list', channelId],
+            (oldData: InfiniteMessages | undefined) => {
+              if (!oldData) {
+                return oldData;
+              }
+
+              const updatedPages = oldData.pages.map((page) => ({
+                ...page,
+                items: page.items.map((msg) =>
+                  msg.id === messageId
+                    ? {
+                        ...msg,
+                        replyCount: Math.max(0, Number(msg.replyCount ?? 0) + Number(delta)),
+                      }
+                    : msg,
+                ),
+              }));
+
+              return {
+                ...oldData,
+                pages: updatedPages,
+              };
+            },
+          );
+        }
       } catch (error) {
         console.error('Error handling channel event message:', error);
       }
