@@ -1,6 +1,6 @@
 // index.ts
 
-import { PresenceMessageSchema, UserSchema } from '@/schemas/realtime';
+import { ChannelEventSchema, PresenceMessageSchema, UserSchema } from '@/schemas/realtime';
 import { Connection, routePartykitRequest, Server } from 'partyserver';
 import z from 'zod';
 
@@ -18,8 +18,7 @@ type Message = z.infer<typeof PresenceMessageSchema>;
 export class Chat extends Server {
   static options = {
     hibernate: true,
-  }
-
+  };
 
   onConnect(connection: Connection) {
     console.log('Connected', connection.id, 'to server', this.name);
@@ -63,6 +62,15 @@ export class Chat extends Server {
 
           return;
         }
+      }
+
+      const channelEvent = ChannelEventSchema.safeParse(parsed);
+
+      if (channelEvent.success) {
+        const payload = JSON.stringify(channelEvent.data);
+
+        this.broadcast(payload, [connection.id]);
+        return;
       }
     } catch (e) {
       console.error('Failed to parse message:', message);

@@ -12967,6 +12967,27 @@ config(en_default());
 // node_modules/.pnpm/zod@4.1.12/node_modules/zod/index.js
 var zod_default = external_exports;
 
+// schemas/message.ts
+var createMessageChannelSchema = zod_default.object({
+  channelId: zod_default.string(),
+  content: zod_default.string(),
+  imageUrl: zod_default.url().optional(),
+  threadId: zod_default.string().optional()
+});
+var updateMessageSchema = zod_default.object({
+  messageId: zod_default.string(),
+  content: zod_default.string().optional()
+});
+var toggleReactionSchema = zod_default.object({
+  messageId: zod_default.string(),
+  emoji: zod_default.string().min(1)
+});
+var GroupedReactionsSchema = zod_default.object({
+  emoji: zod_default.string(),
+  count: zod_default.number(),
+  reactedByUser: zod_default.boolean()
+});
+
 // schemas/realtime.ts
 var UserSchema = external_exports.object({
   id: external_exports.string(),
@@ -12989,6 +13010,49 @@ var PresenceMessageSchema = external_exports.union([
     type: external_exports.literal("presence"),
     payload: external_exports.object({
       users: external_exports.array(UserSchema)
+    })
+  })
+]);
+var RealtimeMessageSchema = external_exports.object({
+  id: external_exports.string(),
+  content: external_exports.string().optional().nullable(),
+  imageUrl: external_exports.url().optional().nullable(),
+  createdAt: external_exports.coerce.date(),
+  updatedAt: external_exports.coerce.date(),
+  authorId: external_exports.string(),
+  authorEmail: external_exports.string().optional().nullable(),
+  authorName: external_exports.string().optional().nullable(),
+  authorAvatar: external_exports.string().optional().nullable(),
+  channelId: external_exports.string().nullable(),
+  threadId: external_exports.string().optional().nullable(),
+  reactions: external_exports.array(GroupedReactionsSchema).optional(),
+  replyCount: external_exports.number().optional()
+});
+var ChannelEventSchema = external_exports.union([
+  external_exports.object({
+    type: external_exports.literal("message:created"),
+    payload: external_exports.object({
+      message: RealtimeMessageSchema
+    })
+  }),
+  external_exports.object({
+    type: external_exports.literal("message:updated"),
+    payload: external_exports.object({
+      message: RealtimeMessageSchema
+    })
+  }),
+  external_exports.object({
+    type: external_exports.literal("reaction:updated"),
+    payload: external_exports.object({
+      messageId: external_exports.string(),
+      reactions: external_exports.array(GroupedReactionsSchema)
+    })
+  }),
+  external_exports.object({
+    type: external_exports.literal("message:replies:incremented"),
+    payload: external_exports.object({
+      messageId: external_exports.string(),
+      delta: external_exports.number()
     })
   })
 ]);
@@ -13642,6 +13706,12 @@ var Chat = class extends Server {
           return;
         }
       }
+      const channelEvent = ChannelEventSchema.safeParse(parsed);
+      if (channelEvent.success) {
+        const payload = JSON.stringify(channelEvent.data);
+        this.broadcast(payload, [connection.id]);
+        return;
+      }
     } catch (e) {
       console.error("Failed to parse message:", message);
       return;
@@ -13728,7 +13798,7 @@ var jsonError = /* @__PURE__ */ __name(async (request, env2, _ctx, middlewareCtx
 }, "jsonError");
 var middleware_miniflare3_json_error_default = jsonError;
 
-// .wrangler/tmp/bundle-4nW6iu/middleware-insertion-facade.js
+// .wrangler/tmp/bundle-IrmDxm/middleware-insertion-facade.js
 var __INTERNAL_WRANGLER_MIDDLEWARE__ = [
   middleware_ensure_req_body_drained_default,
   middleware_miniflare3_json_error_default
@@ -13760,7 +13830,7 @@ function __facade_invoke__(request, env2, ctx, dispatch, finalMiddleware) {
 }
 __name(__facade_invoke__, "__facade_invoke__");
 
-// .wrangler/tmp/bundle-4nW6iu/middleware-loader.entry.ts
+// .wrangler/tmp/bundle-IrmDxm/middleware-loader.entry.ts
 var __Facade_ScheduledController__ = class ___Facade_ScheduledController__ {
   constructor(scheduledTime, cron, noRetry) {
     this.scheduledTime = scheduledTime;
