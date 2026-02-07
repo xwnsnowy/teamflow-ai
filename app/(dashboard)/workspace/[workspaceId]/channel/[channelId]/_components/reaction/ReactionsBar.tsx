@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useParams } from 'next/navigation';
 import { MessageListItem } from '@/lib/types';
+import { useChannelRealtime } from '@/providers/ChannelRealtimeProvider';
 
 type ThreadContext = { type: 'thread'; threadId: string };
 type ListContext = { type: 'list'; channelId: string };
@@ -61,6 +62,8 @@ function updateReactions(
 export function ReactionsBar({ messageId, reactions, context }: ReactionsBarProps) {
   const { channelId } = useParams<{ channelId: string }>();
   const queryClient = useQueryClient();
+
+  const { send } = useChannelRealtime();
 
   const toggleMutation = useMutation(
     orpc.message.reaction.toggle.mutationOptions({
@@ -136,8 +139,16 @@ export function ReactionsBar({ messageId, reactions, context }: ReactionsBarProp
 
         return { previousList, previousThread, listKey, threadKey };
       },
-      onSuccess: () => {
+      onSuccess: (data) => {
         toast.success('Reaction toggled!');
+
+        send({
+          type: 'reaction:updated',
+          payload: {
+            messageId,
+            reactions: data.reaction,
+          },
+        });
       },
       onError: (_err, _vars, ctx) => {
         // Rollback on error

@@ -98,6 +98,31 @@ export function ChannelRealtimeProvider({ channelId, children }: ChannelRealtime
           );
           return;
         }
+
+        if (event.type === 'reaction:updated') {
+          const { messageId, reactions } = event.payload;
+
+          queryClient.setQueryData<InfiniteMessages>(
+            ['messages', 'list', channelId],
+            (oldData: InfiniteMessages | undefined) => {
+              if (!oldData) {
+                return oldData;
+              }
+
+              const updatedPages = oldData.pages.map((page) => ({
+                ...page,
+                items: page.items.map((msg) =>
+                  msg.id === messageId ? { ...msg, reactions } : msg,
+                ),
+              }));
+
+              return {
+                ...oldData,
+                pages: updatedPages,
+              };
+            },
+          );
+        }
       } catch (error) {
         console.error('Error handling channel event message:', error);
       }
