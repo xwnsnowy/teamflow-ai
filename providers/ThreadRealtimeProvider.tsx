@@ -63,6 +63,41 @@ export function ThreadRealtimeProvider({ threadId, children }: ThreadRealtimeCon
 
           return;
         }
+
+        if (event.type === 'thread:reaction:updated') {
+          const { messageId, reactions, threadId: tid } = event.payload;
+
+          if (tid !== threadId) {
+            return;
+          }
+
+          queryClient.setQueryData(
+            ['messages', 'thread', threadId],
+            (oldData: ThreadQueryData | undefined) => {
+              if (!oldData) {
+                return oldData;
+              }
+
+              if (messageId === threadId) {
+                return {
+                  ...oldData,
+                  parent: {
+                    ...oldData.parent,
+                    reactions: reactions,
+                  },
+                };
+              }
+
+              return {
+                ...oldData,
+                messages: oldData.messages.map((msg) =>
+                  msg.id === messageId ? { ...msg, reactions: reactions } : msg,
+                ),
+              };
+            },
+          );
+          return;
+        }
       } catch (error) {
         console.error('Error handling thread event:', error);
       }
@@ -88,4 +123,8 @@ export function useThreadRealtime(): ThreadRealtimeContextValue {
   }
 
   return context;
+}
+
+export function useOptionalThreadRealtime(): ThreadRealtimeContextValue | null {
+  return useContext(ThreadRealtimeContext);
 }

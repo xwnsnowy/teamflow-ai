@@ -369,7 +369,7 @@ export const toggleReaction = base
   .output(
     z.object({
       messageId: z.string(),
-      reaction: z.array(GroupedReactionsSchema),
+      reactions: z.array(GroupedReactionsSchema),
     }),
   )
   .handler(async ({ input, context, errors }) => {
@@ -441,7 +441,7 @@ export const toggleReaction = base
 
     return {
       messageId: updated.id,
-      reaction: groupReactions(
+      reactions: groupReactions(
         (updated.messsageReactions ?? []).map((r) => ({ emoji: r.emoji, userId: r.userId })),
         context.user.id,
       ),
