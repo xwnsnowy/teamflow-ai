@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { ArrowRight, ChevronRight } from 'lucide-react';
+import { ArrowRight, Terminal, Cpu, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import { TextEffect } from '@/components/ui/text-effect';
@@ -9,289 +9,147 @@ import { Variants } from 'motion/react';
 
 const transitionVariants = {
   item: {
-    hidden: {
-      opacity: 0,
-      filter: 'blur(12px)',
-      y: 12,
-    },
+    hidden: { opacity: 0, filter: 'blur(12px)', y: 20 },
     visible: {
       opacity: 1,
       filter: 'blur(0px)',
       y: 0,
-      transition: {
-        type: 'spring',
-        bounce: 0.3,
-        duration: 1.5,
-      },
+      transition: { type: 'spring', bounce: 0.3, duration: 1.2 },
     },
   },
 };
 
 export default function HeroSection() {
   return (
-    <>
-      <main className="overflow-hidden">
-        <div
-          aria-hidden
-          className="absolute inset-0 isolate hidden opacity-65 contain-strict lg:block"
-        >
-          <div className="w-140 h-320 -translate-y-87.5 absolute left-0 top-0 -rotate-45 rounded-full bg-[radial-gradient(68.54%_68.72%_at_55.02%_31.46%,hsla(0,0%,85%,.08)_0,hsla(0,0%,55%,.02)_50%,hsla(0,0%,45%,0)_80%)]" />
-          <div className="h-320 absolute left-0 top-0 w-60 -rotate-45 rounded-full bg-[radial-gradient(50%_50%_at_50%_50%,hsla(0,0%,85%,.06)_0,hsla(0,0%,45%,.02)_80%,transparent_100%)] [translate:5%_-50%]" />
-          <div className="h-320 -translate-y-87.5 absolute left-0 top-0 w-60 -rotate-45 bg-[radial-gradient(50%_50%_at_50%_50%,hsla(0,0%,85%,.04)_0,hsla(0,0%,45%,.02)_80%,transparent_100%)]" />
-        </div>
-        <section>
-          <div className="relative pt-24 md:pt-36">
-            <AnimatedGroup
-              variants={{
-                container: {
-                  visible: {
-                    transition: {
-                      delayChildren: 1,
-                    },
-                  },
-                },
-                item: {
-                  hidden: {
-                    opacity: 0,
-                    y: 20,
-                  },
-                  visible: {
-                    opacity: 1,
-                    y: 0,
-                    transition: {
-                      type: 'spring',
-                      bounce: 0.3,
-                      duration: 2,
-                    },
-                  },
-                },
-              }}
-              className="mask-b-from-35% mask-b-to-90% absolute inset-0 top-56 -z-20 lg:top-32"
-            >
-              <Image
-                src="https://ik.imagekit.io/lrigu76hy/tailark/night-background.jpg?updatedAt=1745733451120"
-                alt="background"
-                className="hidden size-full dark:block"
-                width="3276"
-                height="4095"
-              />
+    <main className="relative min-h-screen overflow-hidden bg-background text-foreground transition-colors duration-500">
+      {/* --- DYNAMIC BACKGROUND LAYER --- */}
+      <div className="absolute inset-0 z-0 overflow-hidden">
+        {/* Lưới Grid: Light mode dùng xám nhạt, Dark mode dùng xám đậm */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,met-zinc-500/10_1px,transparent_1px),linear-gradient(to_bottom,met-zinc-500/10_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
+
+        {/* Glow Effects: Thay đổi theo mode thông qua opacity */}
+        <div className="absolute -top-[10%] left-1/2 -translate-x-1/2 h-[500px] w-full max-w-[800px] rounded-full bg-primary/20 blur-[120px] dark:bg-primary/10" />
+      </div>
+
+      <section className="relative z-10 pt-24 md:pt-36">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="flex flex-col items-center text-center">
+            <AnimatedGroup variants={transitionVariants as Variants}>
+              <Link
+                href="#link"
+                className="group relative flex items-center gap-3 border border-border bg-muted/50 px-4 py-1.5 backdrop-blur-md transition-all hover:border-primary/50"
+                style={{
+                  clipPath:
+                    'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)',
+                }}
+              >
+                <Terminal className="size-4 text-primary" />
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em]">
+                  System Status: <span className="text-primary">Operational</span>
+                </span>
+                <div className="ml-2 flex h-5 w-5 items-center justify-center bg-foreground transition-colors group-hover:bg-primary">
+                  <ArrowRight className="size-3 text-background" />
+                </div>
+              </Link>
             </AnimatedGroup>
 
-            <div
-              aria-hidden
-              className="absolute inset-0 -z-10 size-full [background:radial-gradient(125%_125%_at_50%_100%,transparent_0%,var(--color-background)_75%)]"
-            />
-
-            <div className="mx-auto max-w-7xl px-6">
-              <div className="text-center sm:mx-auto lg:mr-auto lg:mt-0">
-                <AnimatedGroup variants={transitionVariants as Variants}>
-                  <Link
-                    href="#link"
-                    className="hover:bg-background dark:hover:border-t-border bg-muted group mx-auto flex w-fit items-center gap-4 rounded-full border p-1 pl-4 shadow-md shadow-zinc-950/5 transition-colors duration-300 dark:border-t-white/5 dark:shadow-zinc-950"
-                  >
-                    <span className="text-foreground text-sm">
-                      Introducing Support for AI Models
-                    </span>
-                    <span className="dark:border-background block h-4 w-0.5 border-l bg-white dark:bg-zinc-700"></span>
-
-                    <div className="bg-background group-hover:bg-muted size-6 overflow-hidden rounded-full duration-500">
-                      <div className="flex w-12 -translate-x-1/2 duration-500 ease-in-out group-hover:translate-x-0">
-                        <span className="flex size-6">
-                          <ArrowRight className="m-auto size-3" />
-                        </span>
-                        <span className="flex size-6">
-                          <ArrowRight className="m-auto size-3" />
-                        </span>
-                      </div>
-                    </div>
-                  </Link>
-                </AnimatedGroup>
-
-                <TextEffect
-                  preset="fade-in-blur"
-                  speedSegment={0.3}
-                  as="h1"
-                  className="mx-auto mt-8 max-w-4xl text-balance text-5xl max-md:font-semibold md:text-7xl lg:mt-16 xl:text-[5.25rem]"
-                >
-                  The future-ready workspace for AI-powered teamwork
+            <div className="mt-10">
+              <h1 className="text-5xl font-black italic tracking-tighter sm:text-7xl lg:text-8xl uppercase">
+                <TextEffect preset="fade-in-blur" as="span" className="block">
+                  Future-Ready
                 </TextEffect>
-                <TextEffect
-                  per="line"
-                  preset="fade-in-blur"
-                  speedSegment={0.3}
-                  delay={0.5}
-                  as="p"
-                  className="mx-auto mt-8 max-w-2xl text-balance text-lg"
-                >
-                  Streamlines team communication with real-time threads, smart channels, and
-                  AI-driven coordination.
-                </TextEffect>
-
-                <AnimatedGroup
-                  variants={
-                    {
-                      container: {
-                        visible: {
-                          transition: {
-                            staggerChildren: 0.05,
-                            delayChildren: 0.75,
-                          },
-                        },
-                      },
-                      ...transitionVariants,
-                    } as Variants
-                  }
-                  className="mt-12 flex flex-col items-center justify-center gap-2 md:flex-row"
-                >
-                  <div
-                    key={1}
-                    className="bg-foreground/10 rounded-[calc(var(--radius-xl)+0.125rem)] border p-0.5"
-                  >
-                    <Button asChild size="lg" className="rounded-xl px-5 text-base">
-                      <Link href="#link">
-                        <span className="text-nowrap">Get Started</span>
-                      </Link>
-                    </Button>
-                  </div>
-                  <Button
-                    key={2}
-                    asChild
-                    size="lg"
-                    variant="secondary"
-                    className="h-10.5 rounded-xl px-5"
-                  >
-                    <Link href="#link">
-                      <span className="text-nowrap">Request a demo</span>
-                    </Link>
-                  </Button>
-                </AnimatedGroup>
-              </div>
+                <span className="relative inline-block text-primary dark:drop-shadow-[0_0_15px_rgba(var(--primary),0.4)]">
+                  <TextEffect preset="fade-in-blur" as="span" className="block">
+                    Workspace
+                  </TextEffect>
+                  <span className="absolute -bottom-2 left-0 h-1 w-full bg-primary/30" />
+                </span>
+              </h1>
             </div>
+
+            <TextEffect
+              per="line"
+              preset="fade-in-blur"
+              delay={0.5}
+              as="p"
+              className="mt-8 max-w-2xl text-lg font-medium text-muted-foreground"
+            >
+              Streamlines team communication with real-time threads, smart channels, and AI-driven
+              coordination.
+            </TextEffect>
 
             <AnimatedGroup
               variants={
                 {
                   container: {
-                    visible: {
-                      transition: {
-                        staggerChildren: 0.05,
-                        delayChildren: 0.75,
-                      },
-                    },
+                    visible: { transition: { staggerChildren: 0.1, delayChildren: 0.8 } },
                   },
                   ...transitionVariants,
                 } as Variants
               }
+              className="mt-12 flex flex-col gap-4 sm:flex-row"
             >
-              <div className="mask-b-from-55% relative -mr-56 mt-8 overflow-hidden px-2 sm:mr-0 sm:mt-12 md:mt-20">
-                <div className="inset-shadow-2xs ring-background dark:inset-shadow-white/20 bg-background relative mx-auto max-w-6xl overflow-hidden rounded-2xl border p-4 shadow-lg shadow-zinc-950/15 ring-1">
-                  <Image
-                    className="bg-background aspect-15/8 relative hidden rounded-2xl dark:block"
-                    src="/mail2.png"
-                    alt="app screen"
-                    width="2700"
-                    height="1440"
-                  />
-                  <Image
-                    className="z-2 border-border/25 aspect-15/8 relative rounded-2xl border dark:hidden"
-                    src="/mail2-light.png"
-                    alt="app screen"
-                    width="2700"
-                    height="1440"
-                  />
-                </div>
-              </div>
+              <Button
+                size="lg"
+                className="group relative h-12 rounded-none bg-foreground px-8 font-bold text-background hover:bg-primary hover:text-primary-foreground"
+                style={{ clipPath: 'polygon(12% 0, 100% 0, 100% 70%, 88% 100%, 0 100%, 0 30%)' }}
+              >
+                GET STARTED
+                <Zap className="ml-2 size-4 fill-current transition-transform group-hover:scale-125" />
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                className="h-12 rounded-none border-2 border-border bg-transparent px-8 font-bold hover:bg-muted"
+                style={{ clipPath: 'polygon(12% 0, 100% 0, 100% 70%, 88% 100%, 0 100%, 0 30%)' }}
+              >
+                REQUEST DEMO
+              </Button>
             </AnimatedGroup>
           </div>
-        </section>
-        <section className="bg-background pb-16 pt-16 md:pb-32">
-          <div className="group relative m-auto max-w-5xl px-6">
-            <div className="absolute inset-0 z-10 flex scale-95 items-center justify-center opacity-0 duration-500 group-hover:scale-100 group-hover:opacity-100">
-              <Link href="/" className="block text-sm duration-150 hover:opacity-75">
-                <span> Meet Our Customers</span>
+        </div>
+        x{' '}
+        <div className="relative mx-auto mt-20 max-w-6xl px-6 md:mt-32">
+          <div className="absolute -left-2 -top-2 z-20 size-8 border-l-2 border-t-2 border-primary" />
+          <div className="absolute -right-2 -bottom-2 z-20 size-8 border-r-2 border-b-2 border-primary/40" />
 
-                <ChevronRight className="ml-1 inline-block size-3" />
-              </Link>
-            </div>
-            <div className="group-hover:blur-xs mx-auto mt-12 grid max-w-2xl grid-cols-4 gap-x-12 gap-y-8 transition-all duration-500 group-hover:opacity-50 sm:gap-x-16 sm:gap-y-14">
-              <div className="flex">
-                <Image
-                  className="mx-auto h-5 w-fit dark:invert"
-                  src="https://html.tailus.io/blocks/customers/nvidia.svg"
-                  alt="Nvidia Logo"
-                  height={20}
-                  width={100}
-                />
-              </div>
+          <div className="group relative overflow-hidden border border-border bg-card shadow-2xl transition-all hover:border-primary/30">
+            <div className="absolute inset-0 z-10 bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.05)_50%)] bg-[size:100%_4px] pointer-events-none dark:bg-[linear-gradient(transparent_50%,rgba(255,255,255,0.02)_50%)]" />
 
-              <div className="flex">
-                <Image
-                  className="mx-auto h-4 w-fit dark:invert"
-                  src="https://html.tailus.io/blocks/customers/column.svg"
-                  alt="Column Logo"
-                  height={16}
-                  width={100}
-                />
-              </div>
-              <div className="flex">
-                <Image
-                  className="mx-auto h-4 w-fit dark:invert"
-                  src="https://html.tailus.io/blocks/customers/github.svg"
-                  alt="GitHub Logo"
-                  height={16}
-                  width={100}
-                />
-              </div>
-              <div className="flex">
-                <Image
-                  className="mx-auto h-5 w-fit dark:invert"
-                  src="https://html.tailus.io/blocks/customers/nike.svg"
-                  alt="Nike Logo"
-                  height={20}
-                  width={100}
-                />
-              </div>
-              <div className="flex">
-                <Image
-                  className="mx-auto h-5 w-fit dark:invert"
-                  src="https://html.tailus.io/blocks/customers/lemonsqueezy.svg"
-                  alt="Lemon Squeezy Logo"
-                  height={20}
-                  width={100}
-                />
-              </div>
-              <div className="flex">
-                <Image
-                  className="mx-auto h-4 w-fit dark:invert"
-                  src="https://html.tailus.io/blocks/customers/laravel.svg"
-                  alt="Laravel Logo"
-                  height={16}
-                  width={100}
-                />
-              </div>
-              <div className="flex">
-                <Image
-                  className="mx-auto h-7 w-fit dark:invert"
-                  src="https://html.tailus.io/blocks/customers/lilly.svg"
-                  alt="Lilly Logo"
-                  height={28}
-                  width={100}
-                />
-              </div>
-
-              <div className="flex">
-                <Image
-                  className="mx-auto h-6 w-fit dark:invert"
-                  src="https://html.tailus.io/blocks/customers/openai.svg"
-                  alt="OpenAI Logo"
-                  height={24}
-                  width={100}
-                />
-              </div>
-            </div>
+            <Image
+              src="/mail2.png"
+              alt="app screen"
+              width={2700}
+              height={1440}
+              className="hidden h-auto w-full dark:block"
+            />
+            <Image
+              src="/mail2-light.png"
+              alt="app screen"
+              width={2700}
+              height={1440}
+              className="block h-auto w-full dark:hidden"
+            />
           </div>
-        </section>
-      </main>
-    </>
+        </div>
+      </section>
+
+      <section className="py-24 opacity-60 transition-opacity hover:opacity-100">
+        <div className="mx-auto max-w-5xl px-6">
+          <div className="flex flex-wrap justify-center gap-x-12 gap-y-8 grayscale dark:invert">
+            {['nvidia', 'github', 'openai', 'nike'].map((brand) => (
+              <Image
+                key={brand}
+                src={`https://html.tailus.io/blocks/customers/${brand}.svg`}
+                alt={brand}
+                height={20}
+                width={100}
+                className="h-5 w-auto"
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+    </main>
   );
 }

@@ -7,15 +7,14 @@ import { cn } from '@/lib/utils';
 import { LoginLink } from '@kinde-oss/kinde-auth-nextjs/components';
 import { useSuspenseQuery } from '@tanstack/react-query';
 
+// Bảng màu nhẹ nhàng, tinh tế hơn
 const colorCombinations = [
-  'bg-blue-500 hover:bg-blue-600 text-white',
-  'bg-emerald-500 hover:bg-emerald-600 text-white',
-  'bg-purple-500 hover:bg-purple-600 text-white',
-  'bg-amber-500 hover:bg-amber-600 text-white',
-  'bg-rose-500 hover:bg-rose-600 text-white',
-  'bg-indigo-500 hover:bg-indigo-600 text-white',
-  'bg-cyan-500 hover:bg-cyan-600 text-white',
-  'bg-pink-500 hover:bg-pink-600 text-white',
+  'bg-blue-100 text-blue-700 hover:bg-blue-200',
+  'bg-emerald-100 text-emerald-700 hover:bg-emerald-200',
+  'bg-purple-100 text-purple-700 hover:bg-purple-200',
+  'bg-orange-100 text-orange-700 hover:bg-orange-200',
+  'bg-rose-100 text-rose-700 hover:bg-rose-200',
+  'bg-slate-100 text-slate-700 hover:bg-slate-200',
 ];
 
 const getWorkspaceColor = (workspaceId: string) => {
@@ -29,32 +28,41 @@ export function WorkspaceList() {
     data: { workspaces, currentWorkspace },
   } = useSuspenseQuery(orpc.workspace.list.queryOptions());
 
-  // console.log(workspaces);
-
   return (
-    <TooltipProvider>
-      <div className="flex flex-col gap-2">
+    <TooltipProvider delayDuration={100}>
+      <div className="flex flex-col gap-3 py-4 items-center">
         {workspaces.map((workspace) => {
           const isActive = currentWorkspace.orgCode === workspace.id;
+          const colorStyles = getWorkspaceColor(workspace.id);
+
           return (
             <Tooltip key={workspace.id}>
               <TooltipTrigger asChild>
-                <LoginLink orgCode={workspace.id}>
-                  <Button
-                    size="icon"
-                    className={cn(
-                      'size-12 transtition-all duration-200',
-                      getWorkspaceColor(workspace.id),
-                    )}
-                  >
-                    <span className="text-sm font-semibold">{workspace.avatar}</span>
-                  </Button>
-                </LoginLink>
+                <div className="relative">
+                  {/* Thanh chỉ báo đơn giản bên cạnh */}
+                  {isActive && (
+                    <div className="absolute -left-4 top-1/2 -translate-y-1/2 w-1 h-6 bg-foreground rounded-r-full" />
+                  )}
+
+                  <LoginLink orgCode={workspace.id}>
+                    <Button
+                      variant="ghost"
+                      className={cn(
+                        'size-11 rounded-xl transition-all duration-200 p-0 font-bold text-sm',
+                        colorStyles,
+                        isActive
+                          ? 'ring-2 ring-foreground ring-offset-2 scale-100'
+                          : 'opacity-70 hover:opacity-100 hover:scale-105',
+                      )}
+                    >
+                      {workspace.avatar}
+                    </Button>
+                  </LoginLink>
+                </div>
               </TooltipTrigger>
-              <TooltipContent side="right">
-                <p>
-                  {workspace.name} {isActive && '(current)'}
-                </p>
+
+              <TooltipContent side="right" className="font-medium">
+                {workspace.name} {isActive && '(Đang chọn)'}
               </TooltipContent>
             </Tooltip>
           );

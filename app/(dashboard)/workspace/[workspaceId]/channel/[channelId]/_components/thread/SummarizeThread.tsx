@@ -1,11 +1,15 @@
+'use client';
+
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, StopCircle, RefreshCw, Copy, Check, BrainCircuit } from 'lucide-react';
 import { useChat } from '@ai-sdk/react';
 import { eventIteratorToStream } from '@orpc/client';
 import { client } from '@/lib/orpc';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
+import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface SummarizeThreadProps {
   messageId: string;
@@ -13,9 +17,11 @@ interface SummarizeThreadProps {
 
 export function SummarizeThread({ messageId }: SummarizeThreadProps) {
   const [open, setOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const { messages, status, error, sendMessage, setMessages, stop, clearError } = useChat({
     id: `thread-summary:${messageId}`,
+
     transport: {
       async sendMessages(options) {
         return eventIteratorToStream(
@@ -23,10 +29,12 @@ export function SummarizeThread({ messageId }: SummarizeThreadProps) {
             {
               messageId,
             },
+
             { signal: options.abortSignal },
           ),
         );
       },
+
       reconnectToStream() {
         throw new Error('Reconnecting to thread summary stream is not supported.');
       },
@@ -34,101 +42,151 @@ export function SummarizeThread({ messageId }: SummarizeThreadProps) {
   });
 
   const lastAssistantMessage = messages.findLast((msg) => msg.role === 'assistant');
-
   const summaryText =
     lastAssistantMessage?.parts
       .filter((part) => part.type === 'text')
       .map((part) => part.text)
       .join('') || '';
 
-  function handleOpenChange(nextOpen: boolean) {
-    setOpen(nextOpen);
+  const isStreaming = status === 'streaming';
 
+  const onCopy = () => {
+    if (!summaryText) return;
+    navigator.clipboard.writeText(summaryText);
+    setCopied(true);
+    toast.success('Summary copied to clipboard');
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    setOpen(nextOpen);
     if (nextOpen) {
-      // Khi mở popover: reset và gửi yêu cầu tóm tắt nếu chưa có
       stop();
       clearError();
       setMessages([]);
-      const hasAssistantMessage = messages.some((msg) => msg.role === 'assistant');
-      if (status === 'ready' && !hasAssistantMessage) {
-        sendMessage({ text: 'Summarize the thread.' });
-      }
+      // Đợi popover render xong rồi mới gửi request
+      setTimeout(() => {
+        sendMessage({ text: 'Summarize this thread.' });
+      }, 100);
     } else {
-      // Khi đóng popover: dừng và reset
       stop();
-      clearError();
       setMessages([]);
     }
-  }
+  };
 
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <Button
-          type="button"
+          variant="ghost"
           size="sm"
-          className="relative overflow-hidden rounded-full bg-gradient-to-t from-violet-600 to-fuchsia-600 text-primary shadow-md hover:shadow-lg focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none transition-all duration-200 hover:scale-[1.03] active:scale-95"
+          className="h-8 gap-2 px-3 rounded-full hover:bg-violet-500/10 hover:text-violet-600 transition-all group"
         >
-          <span className="flex items-center gap-2">
-            <Sparkles className="size-3.5" />
-            <span className="text-xs font-medium">Summarize</span>
-          </span>
+          <Sparkles
+            className={cn(
+              'size-3.5 text-muted-foreground group-hover:text-violet-500 transition-colors',
+              isStreaming && 'animate-pulse text-violet-500',
+            )}
+          />
+          <span className="text-xs font-bold uppercase tracking-widest">Summarize</span>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[25rem] p-0" align="end">
-        <div className="flex items-center justify-between px-4 py-3 border-b">
+
+      <PopoverContent
+        className="w-[380px] p-0 overflow-hidden border-border/50 shadow-2xl rounded-2xl"
+        align="end"
+        sideOffset={8}
+      >
+        <div className="flex items-center justify-between px-4 py-3 bg-muted/30 border-b border-border/40">
           <div className="flex items-center gap-2">
-            <span className="relative inline-flex items-center justify-center rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-600 py-1.5 px-4 text-xs font-medium text-primary shadow-md gap-1.5">
-              <Sparkles className="size-3.5" />
-              <span className="text-sm font-medium">AI Summary (Preview)</span>
+            <div className="size-5 rounded-lg bg-violet-500/10 flex items-center justify-center">
+              <BrainCircuit className="size-3 text-violet-600" />
+            </div>
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
+              Thread Synthesis
             </span>
           </div>
-          {status === 'streaming' && (
-            <Button
-              onClick={() => {
-                stop();
-              }}
-              type="button"
-              size="sm"
-              variant="outline"
-            >
-              Stop
+          {isStreaming && (
+            <Button size="icon" variant="ghost" className="size-6 text-destructive" onClick={stop}>
+              <StopCircle size={14} />
             </Button>
           )}
         </div>
 
-        <div className="px-4 py-3 max-h-80 overflow-y-auto">
+        <div className="p-5 max-h-[320px] overflow-y-auto scrollbar-thin">
           {error ? (
-            <div>
-              <p className="text-sm text-red-600">Error: {error.message}</p>
+            <div className="py-4 text-center space-y-3">
+              <p className="text-xs text-destructive font-mono italic">{error.message}</p>
               <Button
-                onClick={() => {
-                  clearError();
-                  setMessages([]);
-                  sendMessage({ text: 'Summarize the thread.' });
-                }}
-                type="button"
                 size="sm"
                 variant="outline"
-                className="m-4 w-full bg-red-600 text-primary hover:bg-red-700 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors duration-200"
+                onClick={() => sendMessage({ text: 'Summarize' })}
+                className="h-8 gap-2"
               >
-                Retry
+                <RefreshCw size={12} /> Retry
               </Button>
             </div>
           ) : summaryText ? (
-            <p className="whitespace-pre-wrap text-sm">{summaryText}</p>
-          ) : status === 'submitted' || status === 'streaming' ? (
-            <div className="space-y-2">
-              <p className="text-sm italic text-muted-foreground">Summarizing...</p>
-              <Skeleton className="h-4 w-3/4" />
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-5/6" />
+            <div className="prose prose-sm dark:prose-invert">
+              <p className="text-sm leading-relaxed text-foreground/90 font-medium whitespace-pre-wrap animate-in fade-in slide-in-from-bottom-2 duration-500">
+                {summaryText}
+                {isStreaming && (
+                  <span className="inline-block w-1.5 h-4 ml-1 bg-violet-500 animate-pulse align-middle" />
+                )}
+              </p>
             </div>
           ) : (
-            <p className="text-sm italic text-muted-foreground">
-              Click "Summarize" to generate a summary of this thread.
-            </p>
+            <div className="space-y-3 py-2">
+              <div className="flex items-center gap-2 opacity-50">
+                <RefreshCw className="size-3 animate-spin text-violet-500" />
+                <span className="text-[10px] uppercase font-bold tracking-tighter">
+                  Reading messages...
+                </span>
+              </div>
+              <Skeleton className="h-3 w-[85%] rounded-full opacity-40" />
+              <Skeleton className="h-3 w-[100%] rounded-full opacity-30" />
+              <Skeleton className="h-3 w-[60%] rounded-full opacity-20" />
+            </div>
           )}
+        </div>
+
+        <div className="flex items-center justify-between gap-3 border-t border-border/40 px-3 py-3 bg-muted/10">
+          <Button
+            size="sm"
+            variant="ghost"
+            className="text-[10px] font-bold uppercase tracking-wider"
+            onClick={() => setOpen(false)}
+          >
+            Close
+          </Button>
+
+          <div className="flex gap-2">
+            {summaryText && !isStreaming && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-8 gap-2 border-dashed"
+                onClick={onCopy}
+              >
+                {copied ? <Check size={12} className="text-green-500" /> : <Copy size={12} />}
+                <span className="text-xs">{copied ? 'Copied' : 'Copy'}</span>
+              </Button>
+            )}
+
+            <Button
+              size="sm"
+              variant="default"
+              disabled={isStreaming}
+              onClick={() => {
+                setMessages([]);
+                sendMessage({ text: 'Summarize' });
+              }}
+              className="h-8 gap-2 bg-violet-600 hover:bg-violet-700 shadow-lg shadow-violet-500/20"
+            >
+              <RefreshCw size={12} className={cn(isStreaming && 'animate-spin')} />
+              <span className="text-xs font-bold">Refresh</span>
+            </Button>
+          </div>
         </div>
       </PopoverContent>
     </Popover>

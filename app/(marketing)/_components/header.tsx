@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Cpu, Zap, LayoutDashboard, LogOut } from 'lucide-react';
 import { buttonVariants } from '@/components/ui/button';
 import React, { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -8,6 +8,7 @@ import Image from 'next/image';
 import { RegisterLink, LoginLink, LogoutLink } from '@kinde-oss/kinde-auth-nextjs/components';
 import Logo from '@/public/logo.png';
 import { useKindeBrowserClient } from '@kinde-oss/kinde-auth-nextjs';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 const menuItems = [
   { name: 'Features', href: '#link' },
@@ -24,133 +25,171 @@ export const HeroHeader = () => {
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
+      setIsScrolled(window.scrollY > 20);
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   return (
-    <header>
-      <nav data-state={menuState && 'active'} className="fixed z-20 w-full px-2">
+    <header className="relative">
+      <nav
+        className={cn(
+          'fixed top-0 z-50 w-full transition-all duration-500 ease-in-out px-4 py-4',
+          isScrolled ? 'pt-2' : 'pt-6',
+        )}
+      >
         <div
           className={cn(
-            'mx-auto mt-2 max-w-6xl px-6 transition-all duration-300 lg:px-12',
-            isScrolled && 'bg-background/50 max-w-4xl rounded-2xl border backdrop-blur-lg lg:px-5',
+            'relative mx-auto transition-all duration-500 ease-cyber',
+            'border border-border/40 bg-background/60 backdrop-blur-xl',
+            isScrolled
+              ? 'max-w-4xl shadow-[0_8px_32px_rgba(0,0,0,0.1)] dark:shadow-primary/10'
+              : 'max-w-7xl shadow-none',
           )}
+          style={{
+            clipPath:
+              'polygon(0 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%)',
+          }}
         >
-          <div className="relative flex flex-wrap items-center justify-between gap-6 py-3 lg:gap-0 lg:py-4">
-            <div className="flex w-full justify-between lg:w-auto">
-              <Link href="/" aria-label="home" className="flex items-center space-x-2">
-                <Image src={Logo} alt="logo" height={32} width={32} className="rounded-md" />
-                <h1 className="text-xl font-bold text-muted-foreground">
-                  xWn<span className="text-blue-300">Snowy</span>
+          {/* Decorative Top Line - Đổi màu theo Primary */}
+          <div className="absolute top-0 left-0 h-[2px] w-full bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+
+          <div className="flex items-center justify-between px-6 py-3 lg:px-8">
+            <div className="flex items-center gap-8">
+              <Link href="/" className="group flex items-center space-x-3">
+                <div className="relative">
+                  <Image
+                    src={Logo}
+                    alt="logo"
+                    height={34}
+                    width={34}
+                    className="relative z-10 rounded-sm grayscale transition-all group-hover:grayscale-0"
+                  />
+                  <div className="absolute -inset-1 bg-primary/20 blur-sm opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+                <h1 className="text-lg font-black italic tracking-tighter uppercase">
+                  xWn
+                  <span className="text-primary drop-shadow-[0_0_8px_rgba(var(--primary),0.5)]">
+                    Snowy
+                  </span>
                 </h1>
               </Link>
 
-              <button
-                onClick={() => setMenuState(!menuState)}
-                aria-label={menuState == true ? 'Close Menu' : 'Open Menu'}
-                className="relative z-20 -m-2.5 -mr-4 block cursor-pointer p-2.5 lg:hidden"
-              >
-                <Menu className="in-data-[state=active]:rotate-180 in-data-[state=active]:scale-0 in-data-[state=active]:opacity-0 m-auto size-6 duration-200" />
-                <X className="in-data-[state=active]:rotate-0 in-data-[state=active]:scale-100 in-data-[state=active]:opacity-100 absolute inset-0 m-auto size-6 -rotate-180 scale-0 opacity-0 duration-200" />
-              </button>
-            </div>
-
-            <div className="absolute inset-0 m-auto hidden size-fit lg:block">
-              <ul className="flex gap-8 text-sm">
+              <ul className="hidden lg:flex items-center gap-1">
                 {menuItems.map((item, index) => (
                   <li key={index}>
                     <Link
                       href={item.href}
-                      className="text-muted-foreground hover:text-accent-foreground block duration-150"
+                      className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-muted-foreground transition-all hover:text-primary hover:bg-primary/5"
                     >
-                      <span>{item.name}</span>
+                      {item.name}
                     </Link>
                   </li>
                 ))}
               </ul>
             </div>
 
-            <div className="bg-background in-data-[state=active]:block lg:in-data-[state=active]:flex mb-6 hidden w-full flex-wrap items-center justify-end space-y-8 rounded-3xl border p-6 shadow-2xl shadow-zinc-300/20 md:flex-nowrap lg:m-0 lg:flex lg:w-fit lg:gap-6 lg:space-y-0 lg:border-transparent lg:bg-transparent lg:p-0 lg:shadow-none dark:shadow-none dark:lg:bg-transparent">
-              <div className="lg:hidden">
-                <ul className="space-y-6 text-base">
-                  {menuItems.map((item, index) => (
-                    <li key={index}>
-                      <Link
-                        href={item.href}
-                        className="text-muted-foreground hover:text-accent-foreground block duration-150"
-                      >
-                        <span>{item.name}</span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
+            <div className="flex items-center gap-3">
+              <div className="hidden sm:block">
+                <ThemeToggle />
               </div>
-              {isLoading ? null : (
-                <div className="flex w-full flex-col space-y-3 sm:flex-row sm:gap-3 sm:space-y-0 md:w-fit">
+
+              {!isLoading && (
+                <div className="flex items-center gap-2">
                   {user ? (
-                    <>
-                      <Link className={buttonVariants({ size: 'sm' })} href="/workspace">
-                        <span>DashBoard</span>
-                      </Link>
-
-                      <LogoutLink
-                        className={buttonVariants({
-                          variant: 'secondary',
-                          size: 'sm',
-                        })}
-                      >
-                        <span>Logout</span>
-                      </LogoutLink>
-                    </>
-                  ) : (
-                    <>
-                      <LoginLink
-                        className={buttonVariants({
-                          variant: 'outline',
-                          size: 'sm',
-                          className: cn(isScrolled && 'lg:hidden'),
-                        })}
-                      >
-                        Sign in
-                      </LoginLink>
-
-                      <RegisterLink
-                        className={buttonVariants({
-                          variant: 'secondary',
-                          size: 'sm',
-                          className: cn(isScrolled && 'lg:hidden'),
-                        })}
-                        authUrlParams={{
-                          is_create_org: 'true',
-                          org_name: 'My Workspace',
-                          pricing_table_key: 'teamflow_plans',
+                    <div className="flex items-center gap-2">
+                      <Link
+                        href="/workspace"
+                        className={cn(
+                          buttonVariants({ size: 'sm' }),
+                          'hidden md:flex font-bold italic uppercase h-9 rounded-none bg-primary text-primary-foreground',
+                        )}
+                        style={{
+                          clipPath: 'polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%)',
                         }}
                       >
-                        Sign Up
+                        <LayoutDashboard className="mr-2 size-4" />
+                        Dashboard
+                      </Link>
+                      <LogoutLink
+                        className={cn(
+                          buttonVariants({ variant: 'ghost', size: 'icon' }),
+                          'text-muted-foreground hover:text-destructive',
+                        )}
+                      >
+                        <LogOut className="size-5" />
+                      </LogoutLink>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <LoginLink
+                        className={cn(
+                          buttonVariants({ variant: 'ghost', size: 'sm' }),
+                          'hidden md:flex font-bold uppercase tracking-tight',
+                        )}
+                      >
+                        Sign In
+                      </LoginLink>
+                      <RegisterLink
+                        className={cn(
+                          buttonVariants({ size: 'sm' }),
+                          'font-bold italic uppercase h-9 rounded-none',
+                        )}
+                        style={{
+                          clipPath: 'polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%)',
+                        }}
+                      >
+                        Initialize <Zap className="ml-1 size-3 fill-current" />
                       </RegisterLink>
-
-                      <div className={cn(isScrolled ? 'lg:inline-flex' : 'hidden')}>
-                        <RegisterLink
-                          className={buttonVariants({
-                            size: 'sm',
-                          })}
-                          authUrlParams={{
-                            is_create_org: 'true',
-                            org_name: 'My Workspace',
-                            pricing_table_key: 'teamflow_plans',
-                          }}
-                        >
-                          <span>Get Started</span>
-                        </RegisterLink>
-                      </div>
-                    </>
+                    </div>
                   )}
                 </div>
               )}
+
+              <button
+                onClick={() => setMenuState(!menuState)}
+                className="flex h-9 w-9 items-center justify-center border border-border bg-muted/50 lg:hidden"
+              >
+                {menuState ? <X className="size-5" /> : <Menu className="size-5" />}
+              </button>
             </div>
+          </div>
+        </div>
+
+        <div
+          className={cn(
+            'absolute left-4 right-4 top-full mt-2 overflow-hidden bg-background/95 backdrop-blur-2xl transition-all duration-300 lg:hidden',
+            menuState
+              ? 'max-h-[400px] border border-border p-6 opacity-100'
+              : 'max-h-0 border-none p-0 opacity-0',
+          )}
+          style={{
+            clipPath:
+              'polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%)',
+          }}
+        >
+          <ul className="space-y-4">
+            {menuItems.map((item, index) => (
+              <li key={index}>
+                <Link
+                  href={item.href}
+                  onClick={() => setMenuState(false)}
+                  className="flex items-center gap-3 text-sm font-bold uppercase tracking-widest hover:text-primary"
+                >
+                  <Cpu className="size-4 text-primary" />
+                  {item.name}
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-6 flex flex-col gap-3 border-t border-border pt-6">
+            <ThemeToggle />
+            {!user && (
+              <RegisterLink className={cn(buttonVariants(), 'w-full rounded-none')}>
+                Sign Up Now
+              </RegisterLink>
+            )}
           </div>
         </div>
       </nav>

@@ -8,6 +8,7 @@ import { ChannelsList } from './_components/ChannelList';
 import { MemberList } from './_components/MemberList';
 import { getQueryClient, HydrateClient } from '@/lib/query/hydration';
 import { orpc } from '@/lib/orpc';
+import { ChannelSidebar } from './_components/ChannelSidebar';
 
 const ChannelListLayout = async ({ children }: { children: React.ReactNode }) => {
   const queryClient = getQueryClient();
@@ -16,19 +17,14 @@ const ChannelListLayout = async ({ children }: { children: React.ReactNode }) =>
 
   return (
     <>
-      <div className="flex h-full w-80 flex-col bg-secondary border-r border-border">
-        <div className="flex items-center px-4 h-14 border-b border-border">
+      <ChannelSidebar
+        header={
           <HydrateClient client={queryClient}>
             <WorkspaceHeader />
           </HydrateClient>
-        </div>
-
-        <div className="px-4 py-2">
-          <CreateNewChannel />
-        </div>
-
-        {/* Channels List*/}
-        <div className="flex-1 overflow-y-auto px-4">
+        }
+        createChannel={<CreateNewChannel />}
+        channels={
           <Collapsible defaultOpen>
             <CollapsibleTrigger asChild>
               <Button
@@ -47,10 +43,8 @@ const ChannelListLayout = async ({ children }: { children: React.ReactNode }) =>
               </HydrateClient>
             </CollapsibleContent>
           </Collapsible>
-        </div>
-
-        {/* Members List*/}
-        <div className="px-3 py-2 border-t border-border">
+        }
+        members={
           <Collapsible defaultOpen>
             <CollapsibleTrigger asChild>
               <Button
@@ -69,8 +63,8 @@ const ChannelListLayout = async ({ children }: { children: React.ReactNode }) =>
               </HydrateClient>
             </CollapsibleContent>
           </Collapsible>
-        </div>
-      </div>
+        }
+      />
       {children}
     </>
   );

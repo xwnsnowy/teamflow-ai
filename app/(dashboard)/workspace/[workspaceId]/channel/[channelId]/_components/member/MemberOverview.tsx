@@ -1,29 +1,29 @@
+'use client';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { orpc } from '@/lib/orpc';
 import { useQuery } from '@tanstack/react-query';
-import { Search, Users } from 'lucide-react';
+import { Search, Users, Loader2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { MemberItem } from './MemberItem';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePresence } from '@/hooks/use-presence';
 import { useParams } from 'next/navigation';
 import { User } from '@/schemas/realtime';
+import { cn } from '@/lib/utils';
 
 export function MemberOverview() {
   const params = useParams();
-
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
 
-  const { data, isLoading, error } = useQuery(orpc.workspace.member.list.queryOptions());
-
+  const { data: members, isLoading, error } = useQuery(orpc.workspace.member.list.queryOptions());
   const { data: workspaces } = useQuery(orpc.workspace.list.queryOptions());
 
   const currentUser = useMemo(() => {
     if (!workspaces?.user) return null;
-
     return {
       id: workspaces.user.id,
       full_name: workspaces.user.given_name + ' ' + workspaces.user.family_name,
@@ -32,92 +32,104 @@ export function MemberOverview() {
     } satisfies User;
   }, [workspaces?.user]);
 
-  const members = data ?? [];
-
-  const query = search.trim().toLowerCase();
-
-  const filteredMembers = query
-    ? members.filter((member) => {
-        return (
-          member.full_name?.toLowerCase().includes(query) ||
-          member.email?.toLowerCase().includes(query)
-        );
-      })
-    : members;
-
   const workspaceId = params.workspaceId as string;
-
   const { onlineUsers } = usePresence({
     room: `workspace-${workspaceId}`,
     currentUser: currentUser,
   });
 
-  const onlineUserIds = useMemo(() => new Set(onlineUsers.map((user) => user.id)), [onlineUsers]);
+  const onlineUserIds = useMemo(() => new Set(onlineUsers.map((u) => u.id)), [onlineUsers]);
+
+  const filteredMembers = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return members ?? [];
+    return (members ?? []).filter(
+      (m) => m.full_name?.toLowerCase().includes(q) || m.email?.toLowerCase().includes(q),
+    );
+  }, [members, search]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline">
-          <Users />
-          <span>Members</span>
+        <Button
+          variant="ghost"
+          size="sm"
+          className={cn(
+            'h-8 gap-2 px-2 hover:bg-muted transition-all',
+            open && 'bg-muted text-primary',
+          )}
+        >
+          <div className="flex -space-x-2">
+            <Users size={14} className="text-muted-foreground" />
+          </div>
+          <span className="text-xs font-bold uppercase tracking-widest leading-none">
+            {members?.length ?? 0}
+          </span>
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-[320px] p-0">
-        <div className="p-0">
-          {/* Header */}
-          <div className="p-4 border-b">
-            <h3 className="font-semibold text-sm">Workspace Members</h3>
-            <p className="text-xs text-muted-foreground">{data?.length} Members</p>
-          </div>
-          {/* Search */}
-          <div className="p-4 border-b">
-            <div className="relative">
-              <Search
-                className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none"
-                aria-hidden="true"
-              />
-              <Input
-                placeholder="Search members..."
-                className="pl-9 h-9"
-                aria-label="Search members"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-          </div>
 
-          {/* Member List */}
-          <div className="max-h-80 overflow-y-auto">
-            {error ? (
-              <p className="p-4 text-sm text-red-500">Error loading members.</p>
-            ) : isLoading ? (
-              Array.from({ length: 5 }).map((_, index) => (
-                <div
-                  key={index}
-                  className="animate-pulse flex items-center justify-center p-3 space-x-4"
-                >
+      <PopoverContent
+        align="end"
+        sideOffset={8}
+        className="w-[300px] p-0 rounded-xl shadow-2xl border-border/50 overflow-hidden"
+      >
+        <div className="p-3 bg-muted/30 flex items-center justify-between">
+          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
+            Personnel Overview
+          </span>
+          <div className="flex items-center gap-1.5">
+            <div className="size-1.5 rounded-full bg-green-500 animate-pulse" />
+            <span className="text-[10px] font-mono text-muted-foreground">
+              {onlineUsers.length} Online
+            </span>
+          </div>
+        </div>
+
+        <div className="p-2 border-b border-border/40">
+          <div className="relative group">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground/50 group-focus-within:text-primary transition-colors" />
+            <Input
+              placeholder="Filter by name or email..."
+              className="pl-8 h-8 text-xs bg-muted/50 border-none focus-visible:ring-1 focus-visible:ring-primary/30"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+        </div>
+
+        {/* Member List */}
+        <div className="max-h-72 overflow-y-auto scrollbar-thin">
+          {error ? (
+            <div className="p-8 text-center">
+              <p className="text-xs text-destructive font-mono italic">DATA_FETCH_ERROR</p>
+            </div>
+          ) : isLoading ? (
+            <div className="p-2 space-y-1">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex items-center gap-3 p-2">
                   <Skeleton className="size-8 rounded-full" />
-                  <div className="flex-1 space-x-2">
-                    <div>
-                      <Skeleton className="h-4 w-3/4 rounded" />
-                      <Skeleton className="h-3 w-1/2 rounded" />
-                    </div>
-                    <Skeleton className="h-3 w-1/2 rounded" />
+                  <div className="space-y-1.5">
+                    <Skeleton className="h-3 w-24" />
+                    <Skeleton className="h-2 w-16" />
                   </div>
                 </div>
-              ))
-            ) : filteredMembers.length === 0 ? (
-              <p className="p-4 text-sm text-muted-foreground">No members found.</p>
-            ) : (
-              filteredMembers.map((member) => (
+              ))}
+            </div>
+          ) : filteredMembers.length === 0 ? (
+            <div className="p-8 text-center opacity-40 italic">
+              <p className="text-[10px] uppercase tracking-tighter">No assets found</p>
+            </div>
+          ) : (
+            <div className="p-1 space-y-0.5">
+              {filteredMembers.map((member) => (
                 <MemberItem
                   key={member.id}
                   member={member}
-                  isOnline={member.id ? onlineUserIds.has(member.id) : false}
+                  isOnline={!!member.id && onlineUserIds.has(member.id)}
                 />
-              ))
-            )}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </PopoverContent>
     </Popover>

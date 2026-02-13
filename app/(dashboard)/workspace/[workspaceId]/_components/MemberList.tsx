@@ -10,6 +10,7 @@ import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import { useMemo } from 'react';
+import { Shield } from 'lucide-react';
 
 export function MemberList() {
   const {
@@ -40,40 +41,64 @@ export function MemberList() {
   const onlineUserIds = useMemo(() => new Set(onlineUsers.map((user) => user.id)), [onlineUsers]);
 
   return (
-    <div className="space-y-1 py-1">
-      {members.map((member) => (
-        <div
-          key={member.id}
-          className="relative group flex items-center px-2 py-1 text-sm font-mono font-medium rounded-md border text-muted-foreground  hover:bg-teal-700 transition-colors duration-200 cursor-pointer"
-        >
-          <div className="relative flex-shrink-0">
-            <Avatar className="size-8 relative">
-              <Image
-                src={getAvatar(member.picture, member.email)}
-                alt="User Image"
-                fill
-                sizes="(max-width: 768px) 32px, 32px"
-                className="object-cover rounded-full"
-              />
-              <AvatarFallback>{member.full_name?.charAt(0)}</AvatarFallback>
-            </Avatar>
+    <div className="flex flex-col gap-0.5 py-2 px-3">
+      {/* Section Header Tối giản */}
+      <div className="px-2 mb-2">
+        <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/60">
+          Members — {members.length}
+        </span>
+      </div>
 
-            {/* Online/offline status indicator */}
-            <div
-              className={cn(
-                'absolute bottom-0 right-0 size-2.5 rounded-full border-2 border-background',
-                member.id && onlineUserIds.has(member.id) ? 'bg-violet-500' : 'bg-gray-400',
+      {members.map((member) => {
+        const isOnline = member.id && onlineUserIds.has(member.id);
+        const isMe = member.id === currentUser?.id;
+
+        return (
+          <div
+            key={member.id}
+            className="group flex items-center gap-3 px-2 py-1.5 rounded-md hover:bg-muted transition-colors duration-200 cursor-pointer"
+          >
+            <div className="relative flex-shrink-0">
+              <Avatar className="size-7 border border-border/50">
+                <Image
+                  src={getAvatar(member.picture, member.email)}
+                  alt={member.full_name || 'User'}
+                  fill
+                  sizes="28px"
+                  className="object-cover"
+                />
+                <AvatarFallback className="text-[10px] bg-secondary">
+                  {member.full_name?.charAt(0)}
+                </AvatarFallback>
+              </Avatar>
+
+              {/* Status Dot đơn giản */}
+              {isOnline && (
+                <div className="absolute -bottom-0.5 -right-0.5 size-2.5 rounded-full bg-green-500 border-2 border-background" />
               )}
-            ></div>
+            </div>
+
+            <div className="flex-1 min-w-0 flex items-center gap-1.5">
+              <span
+                className={cn(
+                  'text-sm truncate transition-colors',
+                  isOnline ? 'text-foreground font-medium' : 'text-muted-foreground',
+                )}
+              >
+                {member.full_name}
+              </span>
+
+              {isMe && (
+                <span className="text-[10px] bg-primary/10 text-primary px-1 rounded font-bold uppercase">
+                  You
+                </span>
+              )}
+            </div>
+
+            {isMe && <Shield size={12} className="text-muted-foreground/30" />}
           </div>
-          <div className="flex-1 min-w-0 ml-2">
-            <span className="truncate group-hover:text-foreground  transition-colors duration-200 font-sans">
-              {member.full_name}
-            </span>
-            <p className="truncate text-xs">{member.email}</p>
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

@@ -3,8 +3,9 @@ import { MessageItem } from './message/MessageItem';
 import { orpc } from '@/lib/orpc';
 import { useParams } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowDown } from 'lucide-react';
+import { ArrowDown, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 export function MessagesList() {
   const { channelId } = useParams<{ channelId: string }>();
@@ -263,52 +264,83 @@ export function MessagesList() {
 
   if (isLoading) {
     return (
-      <div className="flex h-full items-center justify-center">
-        <div className="text-sm text-gray-500">Loading messages...</div>
+      <div className="flex flex-col h-full items-center justify-center gap-2">
+        <Loader2 className="size-6 text-muted-foreground animate-spin" />
+        <p className="text-xs font-medium text-muted-foreground uppercase tracking-widest">
+          Syncing Messages
+        </p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex h-full items-center justify-center">
-        <div className="text-sm text-red-500">Error loading messages</div>
+      <div className="flex h-full items-center justify-center p-6 text-center">
+        <div className="space-y-2">
+          <p className="text-sm text-destructive font-semibold">Failed to load encrypted data</p>
+          <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
+            Retry Connection
+          </Button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="relative h-full w-full">
-      <div ref={scrollContainerRef} className="h-full overflow-y-auto px-4">
+    <div className="relative h-full w-full bg-background">
+      <div
+        ref={scrollContainerRef}
+        className={cn(
+          'h-full overflow-y-auto px-4 py-6 space-y-6 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent',
+          hasNextPage && 'mask-gradient-top',
+        )}
+      >
         {hasNextPage && (
-          <div ref={loadMoreRef} className="py-2 text-center text-sm text-gray-500">
-            {isFetchingNextPage ? 'Loading more messages...' : 'Scroll up to load more'}
+          <div ref={loadMoreRef} className="flex justify-center pb-8">
+            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-muted/50 border border-border/50">
+              <Loader2 className="size-3 animate-spin text-primary" />
+              <span className="text-[10px] font-bold uppercase tracking-tighter text-muted-foreground">
+                Loading History
+              </span>
+            </div>
           </div>
         )}
-        {messages.map((message) => (
-          <MessageItem
-            key={message.id}
-            message={message}
-            onImageLoad={() => {
-              if (pendingScrollRef.current || isNearBottomRef.current) {
-                requestAnimationFrame(() => {
-                  forceScrollToBottom(false);
-                });
-              }
-            }}
-          />
-        ))}
+
+        {/* Empty State */}
+        {messages.length === 0 && (
+          <div className="flex flex-col items-center justify-center h-full opacity-20 grayscale">
+            <div className="size-16 rounded-full border-2 border-dashed border-primary mb-4" />
+            <p className="text-xs font-mono uppercase tracking-widest text-center">
+              Channel_Initiated
+              <br />
+              No_Messages_Found
+            </p>
+          </div>
+        )}
+
+        <div className="flex flex-col gap-1">
+          {messages.map((message) => (
+            <MessageItem
+              key={message.id}
+              message={message}
+              onImageLoad={() => {
+                if (pendingScrollRef.current || isNearBottomRef.current) {
+                  requestAnimationFrame(() => forceScrollToBottom(false));
+                }
+              }}
+            />
+          ))}
+        </div>
       </div>
 
       {showScrollButton && (
         <Button
-          onClick={scrollToBottom}
+          onClick={() => forceScrollToBottom(true)}
           size="icon"
-          variant="default"
-          className="absolute bottom-4 right-8 z-50 h-10 w-10 rounded-full shadow-lg transition-all hover:shadow-xl"
+          className="absolute bottom-6 right-6 z-50 size-9 rounded-full bg-primary text-primary-foreground shadow-2xl hover:scale-110 transition-all border-none ring-4 ring-background"
           aria-label="Scroll to bottom"
         >
-          <ArrowDown className="h-5 w-5" />
+          <ArrowDown className="size-4" />
         </Button>
       )}
     </div>
