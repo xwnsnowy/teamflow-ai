@@ -15,6 +15,21 @@ interface SummarizeThreadProps {
   messageId: string;
 }
 
+function getFriendlyAiErrorMessage(errorMessage?: string) {
+  const normalized = errorMessage?.toLowerCase() ?? '';
+
+  if (
+    normalized.includes('429') ||
+    normalized.includes('rate limit') ||
+    normalized.includes('rate-limited') ||
+    normalized.includes('too many requests')
+  ) {
+    return 'AI đang bị giới hạn (429). Vui lòng thử lại sau ít phút.';
+  }
+
+  return errorMessage || 'Đã có lỗi xảy ra. Vui lòng thử lại.';
+}
+
 export function SummarizeThread({ messageId }: SummarizeThreadProps) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -116,7 +131,9 @@ export function SummarizeThread({ messageId }: SummarizeThreadProps) {
         <div className="p-5 max-h-[320px] overflow-y-auto scrollbar-thin">
           {error ? (
             <div className="py-4 text-center space-y-3">
-              <p className="text-xs text-destructive font-mono italic">{error.message}</p>
+              <p className="text-xs text-destructive font-mono italic">
+                {getFriendlyAiErrorMessage(error.message)}
+              </p>
               <Button
                 size="sm"
                 variant="outline"

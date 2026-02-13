@@ -22,12 +22,9 @@ const transitionVariants = {
 export default function HeroSection() {
   return (
     <main className="relative min-h-screen overflow-hidden bg-background text-foreground transition-colors duration-500">
-      {/* --- DYNAMIC BACKGROUND LAYER --- */}
       <div className="absolute inset-0 z-0 overflow-hidden">
-        {/* Lưới Grid: Light mode dùng xám nhạt, Dark mode dùng xám đậm */}
         <div className="absolute inset-0 bg-[linear-gradient(to_right,met-zinc-500/10_1px,transparent_1px),linear-gradient(to_bottom,met-zinc-500/10_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
 
-        {/* Glow Effects: Thay đổi theo mode thông qua opacity */}
         <div className="absolute -top-[10%] left-1/2 -translate-x-1/2 h-[500px] w-full max-w-[800px] rounded-full bg-primary/20 blur-[120px] dark:bg-primary/10" />
       </div>
 
@@ -108,7 +105,7 @@ export default function HeroSection() {
             </AnimatedGroup>
           </div>
         </div>
-        x{' '}
+
         <div className="relative mx-auto mt-20 max-w-6xl px-6 md:mt-32">
           <div className="absolute -left-2 -top-2 z-20 size-8 border-l-2 border-t-2 border-primary" />
           <div className="absolute -right-2 -bottom-2 z-20 size-8 border-r-2 border-b-2 border-primary/40" />
@@ -116,19 +113,19 @@ export default function HeroSection() {
           <div className="group relative overflow-hidden border border-border bg-card shadow-2xl transition-all hover:border-primary/30">
             <div className="absolute inset-0 z-10 bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.05)_50%)] bg-[size:100%_4px] pointer-events-none dark:bg-[linear-gradient(transparent_50%,rgba(255,255,255,0.02)_50%)]" />
 
-            <Image
-              src="/mail2.png"
+            {/* <Image
+              src="/hero.jpg"
               alt="app screen"
               width={2700}
               height={1440}
               className="hidden h-auto w-full dark:block"
-            />
+            /> */}
             <Image
-              src="/mail2-light.png"
+              src="/hero.jpg"
               alt="app screen"
               width={2700}
               height={1440}
-              className="block h-auto w-full dark:hidden"
+              className="block h-auto w-full"
             />
           </div>
         </div>

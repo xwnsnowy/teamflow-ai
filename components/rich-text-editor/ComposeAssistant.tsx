@@ -16,6 +16,21 @@ interface ComposeAssistantProps {
   onAccept?: (markdown: string) => void;
 }
 
+function getFriendlyAiErrorMessage(errorMessage?: string) {
+  const normalized = errorMessage?.toLowerCase() ?? '';
+
+  if (
+    normalized.includes('429') ||
+    normalized.includes('rate limit') ||
+    normalized.includes('rate-limited') ||
+    normalized.includes('too many requests')
+  ) {
+    return 'AI đang bị giới hạn (429). Vui lòng thử lại sau ít phút.';
+  }
+
+  return errorMessage || 'Đã có lỗi xảy ra. Vui lòng thử lại.';
+}
+
 export function ComposeAssistant({ editor, onAccept }: ComposeAssistantProps) {
   const [open, setOpen] = useState(false);
   const contentForRequestRef = useRef<string>('');
@@ -113,7 +128,9 @@ export function ComposeAssistant({ editor, onAccept }: ComposeAssistantProps) {
         <div className="p-4 min-h-[120px] max-h-[350px] overflow-y-auto scrollbar-thin">
           {error ? (
             <div className="flex flex-col items-center justify-center py-6 text-center space-y-3">
-              <p className="text-xs text-destructive font-mono px-4">{error.message}</p>
+              <p className="text-xs text-destructive font-mono px-4">
+                {getFriendlyAiErrorMessage(error.message)}
+              </p>
               <Button size="sm" variant="outline" onClick={startCompose} className="h-8 gap-2">
                 <RefreshCw size={12} /> Retry
               </Button>
