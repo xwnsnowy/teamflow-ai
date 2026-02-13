@@ -11,10 +11,10 @@ import { useKindeBrowserClient } from '@kinde-oss/kinde-auth-nextjs';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 const menuItems = [
-  { name: 'Features', href: '#link' },
-  { name: 'Solution', href: '#link' },
-  { name: 'Pricing', href: '#link' },
   { name: 'About', href: '#about' },
+  { name: 'Solution', href: '#solution' },
+  { name: 'Pricing', href: '#pricing' },
+  { name: 'Contact', href: '#contact' },
 ];
 
 export const HeroHeader = () => {

@@ -1,11 +1,18 @@
 import React from 'react';
 import Link from 'next/link';
-import { ArrowRight, Terminal, Cpu, Zap } from 'lucide-react';
+import { ArrowRight, Terminal, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import { TextEffect } from '@/components/ui/text-effect';
 import { AnimatedGroup } from '@/components/ui/animated-group';
 import { Variants } from 'motion/react';
+
+const trustedByBrands = [
+  { slug: 'nvidia', color: '76B900', name: 'NVIDIA' },
+  { slug: 'github', color: '76B900', name: 'GitHub' },
+  { slug: 'airbnb', color: '76B900', name: 'Airbnb' },
+  { slug: 'nike', color: '76B900', name: 'Nike' },
+];
 
 const transitionVariants = {
   item: {
@@ -113,19 +120,12 @@ export default function HeroSection() {
           <div className="group relative overflow-hidden border border-border bg-card shadow-2xl transition-all hover:border-primary/30">
             <div className="absolute inset-0 z-10 bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.05)_50%)] bg-[size:100%_4px] pointer-events-none dark:bg-[linear-gradient(transparent_50%,rgba(255,255,255,0.02)_50%)]" />
 
-            {/* <Image
-              src="/hero.jpg"
-              alt="app screen"
-              width={2700}
-              height={1440}
-              className="hidden h-auto w-full dark:block"
-            /> */}
             <Image
               src="/hero.jpg"
               alt="app screen"
               width={2700}
               height={1440}
-              className="block h-auto w-full"
+              className="block h-auto w-full dark:opacity-80"
             />
           </div>
         </div>
@@ -133,14 +133,15 @@ export default function HeroSection() {
 
       <section className="py-24 opacity-60 transition-opacity hover:opacity-100">
         <div className="mx-auto max-w-5xl px-6">
-          <div className="flex flex-wrap justify-center gap-x-12 gap-y-8 grayscale dark:invert">
-            {['nvidia', 'github', 'openai', 'nike'].map((brand) => (
+          <div className="flex flex-wrap justify-center gap-x-12 gap-y-8">
+            {trustedByBrands.map((brand) => (
               <Image
-                key={brand}
-                src={`https://html.tailus.io/blocks/customers/${brand}.svg`}
-                alt={brand}
-                height={20}
-                width={100}
+                key={brand.slug}
+                src={`https://cdn.simpleicons.org/${brand.slug}/${brand.color}`}
+                alt={brand.name}
+                height={150}
+                width={150}
+                unoptimized
                 className="h-5 w-auto"
               />
             ))}

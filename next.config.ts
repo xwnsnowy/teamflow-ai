@@ -38,6 +38,11 @@ const nextConfig: NextConfig = {
         hostname: 'html.tailus.io',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'cdn.simpleicons.org',
+        pathname: '/**',
+      },
     ],
   },
 };
